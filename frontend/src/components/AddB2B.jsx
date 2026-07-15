@@ -34,9 +34,9 @@ function AutocompleteInput({ value, onChange, onSelect, options, placeholder, er
   const ref = useRef(null);
 
   const filtered = useMemo(() => {
-    if (!value.trim()) return options.slice(0, 12);
+    if (!value.trim()) return options;
     const q = value.toLowerCase();
-    return options.filter(o => o.toLowerCase().includes(q)).slice(0, 12);
+    return options.filter(o => o.toLowerCase().includes(q));
   }, [value, options]);
 
   useEffect(() => {
@@ -64,7 +64,7 @@ function AutocompleteInput({ value, onChange, onSelect, options, placeholder, er
       <ChevronDown size={13} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-300 pointer-events-none" />
 
       {open && filtered.length > 0 && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-30 overflow-hidden">
+        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-30 overflow-y-auto max-h-60">
           {filtered.map(opt => (
             <button
               key={opt}
