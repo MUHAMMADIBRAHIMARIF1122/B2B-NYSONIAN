@@ -1,7 +1,8 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { useData } from "../context/DataContext";
-import { CheckCircle, ChevronDown, UserCheck } from "lucide-react";
+import { CheckCircle, ChevronDown, UserCheck, Package } from "lucide-react";
 import StatusBadge from "./StatusBadge";
+import { productNames, skusForProduct, productForSku } from "../data/products";
 
 const PAYMENT_TERMS = ["Net 0", "Net 30", "Net 40", "Net 45", "Net 60"];
 const STATUSES      = ["Received", "Paid", "Partially Received", "Due"];
@@ -28,7 +29,7 @@ function generateOrderNo() {
 }
 
 // ── Autocomplete input ──────────────────────────────────────────────────────
-function AutocompleteInput({ value, onChange, onSelect, options, placeholder, error, icon }) {
+function AutocompleteInput({ value, onChange, onSelect, options, placeholder, error, icon: Icon = UserCheck }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -71,7 +72,7 @@ function AutocompleteInput({ value, onChange, onSelect, options, placeholder, er
               onMouseDown={() => { onSelect(opt); setOpen(false); }}
               className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 flex items-center gap-2 transition-colors"
             >
-              <UserCheck size={12} className="text-gray-300 shrink-0" />
+              <Icon size={12} className="text-gray-300 shrink-0" />
               {opt}
             </button>
           ))}
@@ -309,13 +310,68 @@ export default function AddB2B() {
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div>
                 <Label>Product</Label>
-                <input value={form.product} onChange={e => set("product", e.target.value)}
-                  placeholder="Carry-On Black" className={inp()} />
+                <AutocompleteInput
+                  value={form.product}
+                  onChange={v => {
+                    set("product", v);
+                    // If typed value clears product, also clear SKU
+                    const skus = skusForProduct(v);
+                    if (skus.length === 0) set("sku", "");
+                  }}
+                  onSelect={name => {
+                    const skus = skusForProduct(name);
+                    setForm(f => ({
+                      ...f,
+                      product: name,
+                      sku: skus.length === 1 ? skus[0] : "",
+                    }));
+                    if (errors.product) setErrors(e => ({ ...e, product: false }));
+                  }}
+                  options={productNames}
+                  placeholder="Carry-On Black"
+                  icon={Package}
+                />
               </div>
               <div>
                 <Label>SKU</Label>
-                <input value={form.sku} onChange={e => set("sku", e.target.value)}
-                  placeholder="AllB1" className={inp()} />
+                {skusForProduct(form.product).length > 1 ? (
+                  <select
+                    value={form.sku}
+                    onChange={e => set("sku", e.target.value)}
+                    className={sel()}
+                  >
+                    <option value="">Select SKU…</option>
+                    {skusForProduct(form.product).map(s => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <AutocompleteInput
+                    value={form.sku}
+                    onChange={v => {
+                      set("sku", v);
+                      const match = productForSku(v);
+                      if (match) set("product", match);
+                    }}
+                    onSelect={s => {
+                      const match = productForSku(s);
+                      setForm(f => ({
+                        ...f,
+                        sku: s,
+                        product: match || f.product,
+                      }));
+                    }}
+                    options={skusForProduct(form.product).length === 0
+                      ? [] // no options if no product selected yet — user types freely
+                      : skusForProduct(form.product)
+                    }
+                    placeholder="AllB1"
+                    icon={Package}
+                  />
+                )}
+                {form.product && skusForProduct(form.product).length === 0 && (
+                  <p className="text-[11px] text-gray-400 mt-1">Type SKU manually</p>
+                )}
               </div>
             </div>
             <div className="grid grid-cols-3 gap-4 mb-4">
@@ -331,20 +387,11 @@ export default function AddB2B() {
               </div>
               <div>
                 <Label>Order #</Label>
-                <div className="relative">
-                  <input
-                    value={form.orderNo}
-                    readOnly
-                    className="w-full px-3 py-2 bg-gray-50 border border-gray-100 rounded-lg text-sm font-mono text-indigo-700 font-semibold focus:outline-none cursor-default"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => set("orderNo", generateOrderNo())}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-400 hover:text-indigo-500 underline transition-colors"
-                  >
-                    regenerate
-                  </button>
-                </div>
+                <input
+                  value={form.orderNo}
+                  readOnly
+                  className="w-full px-3 py-2 bg-gray-50 border border-gray-100 rounded-lg text-sm font-mono text-indigo-700 font-semibold focus:outline-none cursor-default"
+                />
                 <p className="text-[11px] text-gray-400 mt-1">Auto-generated · unique per entry</p>
               </div>
             </div>
