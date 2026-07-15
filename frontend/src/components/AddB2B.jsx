@@ -135,6 +135,12 @@ export default function AddB2B() {
     []
   );
 
+  // All SKUs (sorted)
+  const skuOptions = useMemo(() =>
+    [...new Set(productCatalog.map(e => e.sku))].sort(),
+    []
+  );
+
   // Look up most recent profile for a given customer
   function getCustomerProfile(name) {
     const matches = transactions
@@ -357,11 +363,13 @@ export default function AddB2B() {
               </div>
               <div>
                 <Label>SKU</Label>
-                <input
+                <AutocompleteInput
                   value={form.sku}
-                  onChange={e => handleSkuChange(e.target.value)}
+                  onChange={v => handleSkuChange(v)}
+                  onSelect={v => handleSkuChange(v)}
+                  options={skuOptions}
                   placeholder="AllG1"
-                  className={inp()}
+                  icon={Package}
                 />
                 {form.sku && colorForSku(form.sku) && (
                   <p className="text-[11px] text-indigo-500 mt-1 font-medium">
