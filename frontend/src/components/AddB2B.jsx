@@ -2,7 +2,7 @@ import { useState, useMemo, useRef, useEffect } from "react";
 import { useData } from "../context/DataContext";
 import { CheckCircle, ChevronDown, UserCheck, Package } from "lucide-react";
 import StatusBadge from "./StatusBadge";
-import { productNames, variantsForProduct, skusForProduct, productForSku, colorForSku } from "../data/products";
+import { productCatalog, productForSku, colorForSku } from "../data/products";
 
 const PAYMENT_TERMS = ["Net 0", "Net 30", "Net 40", "Net 45", "Net 60"];
 const STATUSES      = ["Received", "Paid", "Partially Received", "Due"];
@@ -34,9 +34,9 @@ function AutocompleteInput({ value, onChange, onSelect, options, placeholder, er
   const ref = useRef(null);
 
   const filtered = useMemo(() => {
-    if (!value.trim()) return options.slice(0, 8);
+    if (!value.trim()) return options.slice(0, 12);
     const q = value.toLowerCase();
-    return options.filter(o => o.toLowerCase().includes(q)).slice(0, 8);
+    return options.filter(o => o.toLowerCase().includes(q)).slice(0, 12);
   }, [value, options]);
 
   useEffect(() => {
@@ -99,8 +99,11 @@ function Divider({ title }) {
 }
 
 const emptyForm = () => ({
-  customer: "", company: "", product: "", invoice: "",
-  invoiceDate: "", sku: "", qty: "", unitPrice: "",
+  customer: "", company: "",
+  productVariant: "",   // display value: "Product — Color"
+  product: "",          // just product name, saved to DB
+  sku: "",
+  invoice: "", invoiceDate: "", qty: "", unitPrice: "",
   paymentTerms: "", dueDate: "", orderNo: generateOrderNo(),
   status: "", paymentRecDate: "", shipmentDate: "",
   fulfilledMonth: "", paymentRecMonth: "",
@@ -126,6 +129,12 @@ export default function AddB2B() {
     [transactions]
   );
 
+  // Combined "Product — Color" options from full catalog (sorted)
+  const productVariantOptions = useMemo(() =>
+    [...new Set(productCatalog.map(e => `${e.product} — ${e.color}`))].sort(),
+    []
+  );
+
   // Look up most recent profile for a given customer
   function getCustomerProfile(name) {
     const matches = transactions
@@ -144,6 +153,28 @@ export default function AddB2B() {
   function set(key, val) {
     setForm(f => ({ ...f, [key]: val }));
     if (errors[key]) setErrors(e => ({ ...e, [key]: false }));
+  }
+
+  // When a "Product — Color" option is selected from the product dropdown
+  function handleVariantSelect(label) {
+    const entry = productCatalog.find(e => `${e.product} — ${e.color}` === label);
+    setForm(f => ({
+      ...f,
+      productVariant: label,
+      product: entry ? entry.product : label,
+      sku:     entry ? entry.sku     : f.sku,
+    }));
+  }
+
+  // When a SKU is typed manually — back-fill product+color
+  function handleSkuChange(v) {
+    const entry = productCatalog.find(e => e.sku.toLowerCase() === v.trim().toLowerCase());
+    setForm(f => ({
+      ...f,
+      sku:            v,
+      product:        entry ? entry.product                    : f.product,
+      productVariant: entry ? `${entry.product} — ${entry.color}` : f.productVariant,
+    }));
   }
 
   // When an existing customer is selected from dropdown
@@ -250,7 +281,7 @@ export default function AddB2B() {
     );
   }
 
-  const hasPreview = form.company || form.customer || form.invoice || total > 0;
+  const hasPreview = form.company || form.customer || form.invoice || form.productVariant || total > 0;
 
   // ── Form ─────────────────────────────────────────────────────────────────
   return (
@@ -309,73 +340,33 @@ export default function AddB2B() {
             <Divider title="What are they buying?" />
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div>
-                <Label>Product</Label>
+                <Label>Product &amp; Colour</Label>
                 <AutocompleteInput
-                  value={form.product}
+                  value={form.productVariant}
                   onChange={v => {
-                    set("product", v);
-                    // If typed value clears product, also clear SKU
-                    const skus = skusForProduct(v);
-                    if (skus.length === 0) set("sku", "");
+                    setForm(f => ({ ...f, productVariant: v, product: v, sku: "" }));
                   }}
-                  onSelect={name => {
-                    const skus = skusForProduct(name);
-                    setForm(f => ({
-                      ...f,
-                      product: name,
-                      sku: skus.length === 1 ? skus[0] : "",
-                    }));
-                    if (errors.product) setErrors(e => ({ ...e, product: false }));
-                  }}
-                  options={productNames}
-                  placeholder="Carry-On Black"
+                  onSelect={handleVariantSelect}
+                  options={productVariantOptions}
+                  placeholder="Carry-On: All-in-One — Forest Green"
                   icon={Package}
                 />
+                {form.product && (
+                  <p className="text-[11px] text-gray-400 mt-1 truncate">{form.product}</p>
+                )}
               </div>
               <div>
                 <Label>SKU</Label>
-                {variantsForProduct(form.product).length > 1 ? (
-                  <select
-                    value={form.sku}
-                    onChange={e => set("sku", e.target.value)}
-                    className={sel()}
-                  >
-                    <option value="">Select colour / SKU…</option>
-                    {variantsForProduct(form.product).map(v => (
-                      <option key={v.sku} value={v.sku}>
-                        {v.color} — {v.sku}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <AutocompleteInput
-                    value={form.sku}
-                    onChange={v => {
-                      set("sku", v);
-                      const match = productForSku(v);
-                      if (match) set("product", match);
-                    }}
-                    onSelect={s => {
-                      const match = productForSku(s);
-                      setForm(f => ({
-                        ...f,
-                        sku: s,
-                        product: match || f.product,
-                      }));
-                    }}
-                    options={skusForProduct(form.product)}
-                    placeholder="AllB1"
-                    icon={Package}
-                  />
-                )}
-                {/* Colour hint after selection */}
+                <input
+                  value={form.sku}
+                  onChange={e => handleSkuChange(e.target.value)}
+                  placeholder="AllG1"
+                  className={inp()}
+                />
                 {form.sku && colorForSku(form.sku) && (
                   <p className="text-[11px] text-indigo-500 mt-1 font-medium">
-                    {colorForSku(form.sku)}
+                    {colorForSku(form.sku)} · auto-filled from SKU
                   </p>
-                )}
-                {form.product && skusForProduct(form.product).length === 0 && !form.sku && (
-                  <p className="text-[11px] text-gray-400 mt-1">Type SKU manually</p>
                 )}
               </div>
             </div>
@@ -544,14 +535,15 @@ export default function AddB2B() {
                   </div>
                 )}
 
-                {form.product && (
-                  <p className="text-xs text-gray-500 truncate">
-                    {form.product}
-                    {form.sku && <span className="text-gray-300 ml-1">· {form.sku}</span>}
-                    {form.sku && colorForSku(form.sku) && (
-                      <span className="text-indigo-400 ml-1">· {colorForSku(form.sku)}</span>
+                {(form.productVariant || form.product) && (
+                  <div>
+                    <p className="text-xs text-gray-700 font-medium truncate">
+                      {form.productVariant || form.product}
+                    </p>
+                    {form.sku && (
+                      <p className="text-[11px] font-mono text-gray-400 mt-0.5">{form.sku}</p>
                     )}
-                  </p>
+                  </div>
                 )}
 
                 {total > 0 && (
