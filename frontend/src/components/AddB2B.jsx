@@ -2,7 +2,7 @@ import { useState, useMemo, useRef, useEffect } from "react";
 import { useData } from "../context/DataContext";
 import { CheckCircle, ChevronDown, UserCheck, Package } from "lucide-react";
 import StatusBadge from "./StatusBadge";
-import { productNames, skusForProduct, productForSku } from "../data/products";
+import { productNames, variantsForProduct, skusForProduct, productForSku, colorForSku } from "../data/products";
 
 const PAYMENT_TERMS = ["Net 0", "Net 30", "Net 40", "Net 45", "Net 60"];
 const STATUSES      = ["Received", "Paid", "Partially Received", "Due"];
@@ -334,15 +334,17 @@ export default function AddB2B() {
               </div>
               <div>
                 <Label>SKU</Label>
-                {skusForProduct(form.product).length > 1 ? (
+                {variantsForProduct(form.product).length > 1 ? (
                   <select
                     value={form.sku}
                     onChange={e => set("sku", e.target.value)}
                     className={sel()}
                   >
-                    <option value="">Select SKU…</option>
-                    {skusForProduct(form.product).map(s => (
-                      <option key={s} value={s}>{s}</option>
+                    <option value="">Select colour / SKU…</option>
+                    {variantsForProduct(form.product).map(v => (
+                      <option key={v.sku} value={v.sku}>
+                        {v.color} — {v.sku}
+                      </option>
                     ))}
                   </select>
                 ) : (
@@ -361,15 +363,18 @@ export default function AddB2B() {
                         product: match || f.product,
                       }));
                     }}
-                    options={skusForProduct(form.product).length === 0
-                      ? [] // no options if no product selected yet — user types freely
-                      : skusForProduct(form.product)
-                    }
+                    options={skusForProduct(form.product)}
                     placeholder="AllB1"
                     icon={Package}
                   />
                 )}
-                {form.product && skusForProduct(form.product).length === 0 && (
+                {/* Colour hint after selection */}
+                {form.sku && colorForSku(form.sku) && (
+                  <p className="text-[11px] text-indigo-500 mt-1 font-medium">
+                    {colorForSku(form.sku)}
+                  </p>
+                )}
+                {form.product && skusForProduct(form.product).length === 0 && !form.sku && (
                   <p className="text-[11px] text-gray-400 mt-1">Type SKU manually</p>
                 )}
               </div>
@@ -540,7 +545,13 @@ export default function AddB2B() {
                 )}
 
                 {form.product && (
-                  <p className="text-xs text-gray-500 truncate">{form.product}{form.sku && <span className="text-gray-300 ml-1">· {form.sku}</span>}</p>
+                  <p className="text-xs text-gray-500 truncate">
+                    {form.product}
+                    {form.sku && <span className="text-gray-300 ml-1">· {form.sku}</span>}
+                    {form.sku && colorForSku(form.sku) && (
+                      <span className="text-indigo-400 ml-1">· {colorForSku(form.sku)}</span>
+                    )}
+                  </p>
                 )}
 
                 {total > 0 && (
