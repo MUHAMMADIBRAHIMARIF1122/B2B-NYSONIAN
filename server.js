@@ -1,10 +1,11 @@
 require("dotenv").config();
 
-const express    = require("express");
-const cors       = require("cors");
-const helmet     = require("helmet");
-const rateLimit  = require("express-rate-limit");
-const { Pool }   = require("pg");
+const express            = require("express");
+const cors               = require("cors");
+const helmet             = require("helmet");
+const rateLimit          = require("express-rate-limit");
+const { Pool }           = require("pg");
+const { createInvoice }  = require("./xero");
 
 const app = express();
 
@@ -143,6 +144,79 @@ app.post("/api/b2b-entries", requireApiKey, writeLimiter, async (req, res) => {
     console.error("DB insert error:", err.message);
     res.status(500).json({ ok: false, error: "Failed to save entry. Please try again." });
   }
+});
+
+// ── POST /api/b2b-invoice ────────────────────────────────────────────────────
+// Saves all line items to DB and creates one DRAFT invoice in Xero.
+app.post("/api/b2b-invoice", requireApiKey, writeLimiter, async (req, res) => {
+  const { header, lineItems } = req.body;
+
+  if (!header || !Array.isArray(lineItems) || lineItems.length === 0) {
+    return res.status(400).json({ ok: false, error: "header and lineItems[] required" });
+  }
+
+  // Validate each combined entry
+  const allErrors = [];
+  lineItems.forEach((item, i) => {
+    const errs = validateEntry({ ...header, ...item });
+    if (errs.length) allErrors.push(`Line ${i + 1}: ${errs.join(", ")}`);
+  });
+  if (allErrors.length) {
+    return res.status(400).json({ ok: false, error: allErrors.join("; ") });
+  }
+
+  // Insert each line item as a separate DB row
+  const savedRows = [];
+  try {
+    for (const item of lineItems) {
+      const total = Number(((item.qty || 0) * (item.unitPrice || 0)).toFixed(2));
+      const result = await pool.query(
+        `INSERT INTO b2b.entries (
+          customer, company, product, invoice, invoice_date, sku,
+          qty, unit_price, total, payment_terms, due_date, order_no,
+          status, payment_rec_date, shipment_date, fulfilled_month,
+          payment_rec_month, delivery, remarks, finance_remarks, closed_won
+        ) VALUES (
+          $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21
+        ) RETURNING id, order_no, created_at`,
+        [
+          header.customer.trim(), header.company.trim(), (item.product || "").trim(),
+          header.invoice.trim(), header.invoiceDate || null, (item.sku || "").trim(),
+          item.qty, item.unitPrice, total,
+          header.paymentTerms || "", header.dueDate || null, header.orderNo,
+          header.status || "", header.paymentRecDate || null, header.shipmentDate || null,
+          header.fulfilledMonth || "", header.paymentRecMonth || "",
+          header.delivery || "Company",
+          (header.remarks || "").trim(), (header.financeRemarks || "").trim(),
+          (header.closedWon || "").trim(),
+        ]
+      );
+      savedRows.push(result.rows[0]);
+    }
+  } catch (err) {
+    console.error("DB insert error:", err.message);
+    return res.status(500).json({ ok: false, error: "Failed to save entries. Please try again." });
+  }
+
+  // Create one Xero DRAFT invoice (non-fatal if Xero is unavailable)
+  let xeroResult = null;
+  try {
+    xeroResult = await createInvoice(header, lineItems);
+    console.log(`[Xero] Invoice ${xeroResult.xeroInvoiceNumber} created for ${header.company}`);
+  } catch (err) {
+    console.error("[Xero] Invoice creation failed:", err.message);
+  }
+
+  const first = savedRows[0];
+  console.log(`[+] Invoice saved: ${savedRows.length} line(s), order=${first.order_no}${xeroResult ? `, xero=${xeroResult.xeroInvoiceId}` : " (Xero skipped)"}`);
+
+  res.json({
+    ok: true,
+    ids:       savedRows.map(r => r.id),
+    orderNo:   first.order_no,
+    createdAt: first.created_at,
+    ...(xeroResult || {}),
+  });
 });
 
 // ── GET /api/health ───────────────────────────────────────────────────────────

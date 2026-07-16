@@ -263,39 +263,45 @@ export default function AddB2B() {
       closedWon:       "",
     };
 
-    const entries = form.lineItems.map(item => ({
-      ...header,
+    const lineItems = form.lineItems.map(item => ({
       product:   item.product.trim(),
       sku:       item.sku.trim(),
       qty:       Number(item.qty),
       unitPrice: parseFloat(item.unitPrice) || 0,
-      total:     Number(((parseFloat(item.qty) || 0) * (parseFloat(item.unitPrice) || 0)).toFixed(2)),
     }));
 
-    let dbError = false;
-    for (const entry of entries) {
-      try {
-        const res = await fetch("/api/b2b-entries", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "x-api-key": import.meta.env.VITE_API_KEY || "" },
-          body: JSON.stringify(entry),
-        });
-        if (!res.ok) {
-          const body = await res.json().catch(() => ({}));
-          console.error("Server rejected entry:", body.error || res.status);
-          dbError = true;
-        }
-      } catch (err) {
-        console.error("Failed to reach server:", err);
-        dbError = true;
+    let xeroInvoiceId = null;
+
+    try {
+      const res = await fetch("/api/b2b-invoice", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-api-key": import.meta.env.VITE_API_KEY || "" },
+        body: JSON.stringify({ header, lineItems }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        console.error("Server rejected invoice:", body.error || res.status);
+      } else {
+        xeroInvoiceId = body.xeroInvoiceId || null;
       }
-      addTransaction(entry);
+    } catch (err) {
+      console.error("Failed to reach server:", err);
     }
 
-    if (dbError) console.warn("One or more entries may not have saved to the database.");
+    // Update local state regardless of server outcome
+    lineItems.forEach(item => {
+      addTransaction({
+        ...header,
+        product:   item.product,
+        sku:       item.sku,
+        qty:       item.qty,
+        unitPrice: item.unitPrice,
+        total:     Number((item.qty * item.unitPrice).toFixed(2)),
+      });
+    });
 
     const newId = Math.max(0, ...transactions.map(t => t.id)) + 1;
-    setSavedEntry({ ...header, lineItems: form.lineItems, id: newId });
+    setSavedEntry({ ...header, lineItems: form.lineItems, id: newId, xeroInvoiceId });
     setMode("success");
   }
 
@@ -384,6 +390,13 @@ export default function AddB2B() {
           <p className="text-sm text-gray-400 mb-1">
             {itemCount} line item{itemCount !== 1 ? "s" : ""} · INV {savedEntry?.invoice}
           </p>
+          {savedEntry?.xeroInvoiceId ? (
+            <p className="text-sm text-indigo-500 mb-1 font-medium">
+              Xero draft created · {savedEntry.xeroInvoiceId.slice(0, 8)}…
+            </p>
+          ) : (
+            <p className="text-sm text-gray-300 mb-1">Xero sync pending</p>
+          )}
           <p className="text-sm text-gray-400 mb-6">Visible across Dashboard, Transactions, and Client Tracker.</p>
           <div className="flex items-center justify-center gap-3">
             <button onClick={handleEditEntry}
