@@ -51,56 +51,13 @@ function BarRow({ company, amount, max, index }) {
   );
 }
 
-// SVG donut chart — each segment drawn as a circle with stroke-dasharray trick
-const STATUS_COLOR = {
-  "Received":           "#34d399",
-  "Paid":               "#60a5fa",
-  "Partially Received": "#fbbf24",
-  "Due":                "#fb923c",
+const TERMS_COLOR = {
+  "Net 0":  "#818cf8",
+  "Net 30": "#34d399",
+  "Net 40": "#fbbf24",
+  "Net 45": "#fb923c",
+  "Net 60": "#f87171",
 };
-
-function DonutChart({ segments }) {
-  const r    = 42;
-  const cx   = 60;
-  const cy   = 60;
-  const circ = 2 * Math.PI * r; // ≈ 263.89
-
-  const total = segments.reduce((s, seg) => s + seg.value, 0);
-  let cumLen  = 0;
-
-  const arcs = segments.map((seg) => {
-    const len        = total > 0 ? (seg.value / total) * circ : 0;
-    const dasharray  = `${len.toFixed(3)} ${(circ - len).toFixed(3)}`;
-    const dashoffset = -cumLen;
-    cumLen += len;
-    return { ...seg, dasharray, dashoffset };
-  });
-
-  return (
-    <svg viewBox="0 0 120 120" className="w-32 h-32 shrink-0">
-      {/* Background track */}
-      <circle cx={cx} cy={cy} r={r} fill="none" stroke="#f3f4f6" strokeWidth="16" />
-      <g transform={`rotate(-90 ${cx} ${cy})`}>
-        {arcs.map((arc) => (
-          <circle
-            key={arc.label}
-            cx={cx}
-            cy={cy}
-            r={r}
-            fill="none"
-            stroke={arc.color}
-            strokeWidth="16"
-            strokeDasharray={arc.dasharray}
-            strokeDashoffset={arc.dashoffset}
-            strokeLinecap="butt"
-          />
-        ))}
-      </g>
-      {/* White center */}
-      <circle cx={cx} cy={cy} r="30" fill="white" />
-    </svg>
-  );
-}
 
 // Mini paired bar chart for monthly revenue
 function MiniBarChart({ data }) {
@@ -187,26 +144,19 @@ export default function Dashboard() {
       .map(t => t.company)
   )];
 
-  // ── Status breakdown ──────────────────────────────────────────────────────
-  const byStatus = transactions.reduce((acc, t) => {
-    if (!acc[t.status]) acc[t.status] = { count: 0, amount: 0 };
-    acc[t.status].count++;
-    acc[t.status].amount += t.total;
+  // ── Payment terms breakdown ───────────────────────────────────────────────
+  const byTerms = transactions.reduce((acc, t) => {
+    const term = t.paymentTerms || "Unknown";
+    if (!acc[term]) acc[term] = { count: 0, amount: 0 };
+    acc[term].count++;
+    acc[term].amount += t.total;
     return acc;
   }, {});
 
-  const statusOrder = { "Received": 1, "Paid": 2, "Partially Received": 3, "Due": 4 };
-
-  const donutSegments = Object.entries(byStatus)
-    .sort((a, b) => (statusOrder[a[0]] || 9) - (statusOrder[b[0]] || 9))
-    .map(([status, { count, amount }]) => ({
-      label: status,
-      count,
-      value: amount,
-      color: STATUS_COLOR[status] || "#d1d5db",
-    }));
-
-  const donutTotal = donutSegments.reduce((s, d) => s + d.value, 0);
+  const termsOrder = { "Net 0": 1, "Net 30": 2, "Net 40": 3, "Net 45": 4, "Net 60": 5 };
+  const termRows = Object.entries(byTerms)
+    .sort((a, b) => (termsOrder[a[0]] || 9) - (termsOrder[b[0]] || 9));
+  const termsMax = Math.max(...termRows.map(([, v]) => v.amount), 1);
 
   // ── Top clients ───────────────────────────────────────────────────────────
   const topCustomers = Object.entries(
@@ -287,27 +237,33 @@ export default function Dashboard() {
       {/* Main panels row */}
       <div className="grid grid-cols-3 gap-4">
 
-        {/* Payment Status — donut chart */}
+        {/* Payment Terms breakdown */}
         <div className="bg-white border border-gray-200 rounded-xl p-5">
-          <h3 className="text-sm font-semibold text-gray-800">Payment Status</h3>
-          <p className="text-xs text-gray-400 mt-0.5 mb-4">Breakdown by revenue value</p>
-          <div className="flex items-center gap-5">
-            <DonutChart segments={donutSegments} />
-            <div className="space-y-2.5 flex-1 min-w-0">
-              {donutSegments.map(({ label, count, value, color }) => {
-                const pct = donutTotal > 0 ? ((value / donutTotal) * 100).toFixed(0) : 0;
-                return (
-                  <div key={label}>
-                    <div className="flex items-center gap-1.5">
+          <h3 className="text-sm font-semibold text-gray-800">Sales by Payment Terms</h3>
+          <p className="text-xs text-gray-400 mt-0.5 mb-5">Total revenue per net term</p>
+          <div className="space-y-4">
+            {termRows.map(([term, { count, amount }]) => {
+              const pct = ((amount / termsMax) * 100).toFixed(1);
+              const color = TERMS_COLOR[term] || "#d1d5db";
+              return (
+                <div key={term}>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex items-center gap-2">
                       <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: color }} />
-                      <span className="text-xs text-gray-600 truncate flex-1">{label}</span>
-                      <span className="text-xs font-semibold text-gray-700 shrink-0">{pct}%</span>
+                      <span className="text-sm text-gray-700 font-medium">{term}</span>
+                      <span className="text-xs text-gray-400">{count} orders</span>
                     </div>
-                    <p className="text-[10px] text-gray-400 pl-3.5">{fmt(value)} · {count} orders</p>
+                    <span className="text-sm font-semibold text-gray-900">{fmt(amount)}</span>
                   </div>
-                );
-              })}
-            </div>
+                  <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all duration-700 ease-out"
+                      style={{ width: `${pct}%`, backgroundColor: color }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
 
