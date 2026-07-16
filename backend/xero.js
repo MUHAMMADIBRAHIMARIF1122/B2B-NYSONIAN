@@ -5,7 +5,8 @@
  * All calls go to the Demo Company while XERO_USE_DEMO=true.
  */
 
-require("dotenv").config();
+const path = require("path");
+require("dotenv").config({ path: path.join(__dirname, ".env") });
 const https = require("https");
 const fs    = require("fs");
 const path  = require("path");
