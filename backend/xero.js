@@ -5,11 +5,10 @@
  * All calls go to the Demo Company while XERO_USE_DEMO=true.
  */
 
-const path = require("path");
-require("dotenv").config({ path: path.join(__dirname, ".env") });
+const path  = require("path");
 const https = require("https");
 const fs    = require("fs");
-const path  = require("path");
+require("dotenv").config({ path: path.join(__dirname, ".env") });
 
 const CLIENT_ID     = process.env.XERO_CLIENT_ID;
 const CLIENT_SECRET = process.env.XERO_CLIENT_SECRET;
