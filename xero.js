@@ -166,8 +166,7 @@ async function createInvoice(header, lineItems) {
     InvoiceNumber:   header.invoice,
     Reference:       header.orderNo     || "",
     CurrencyCode:    header.currency    || "USD",
-    Status:          "DRAFT",
-    LineAmountTypes: "EXCLUSIVE",
+    Status:    "DRAFT",
     LineItems:       lineItems.map(item => ({
       Description: item.product || item.sku || "B2B Product",
       Quantity:    item.qty,
