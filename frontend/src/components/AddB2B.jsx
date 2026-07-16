@@ -117,10 +117,11 @@ const emptyForm = () => ({
 
 // ── Main component ───────────────────────────────────────────────────────────
 export default function AddB2B() {
-  const { addTransaction, transactions } = useData();
-  const [form,    setForm]    = useState(emptyForm);
-  const [errors,  setErrors]  = useState({});
-  const [success, setSuccess] = useState(false);
+  const { addTransaction, updateTransaction, transactions } = useData();
+  const [form,       setForm]       = useState(emptyForm);
+  const [errors,     setErrors]     = useState({});
+  const [mode,       setMode]       = useState("add");   // "add" | "success" | "edit"
+  const [savedEntry, setSavedEntry] = useState(null);
 
   const total = (parseFloat(form.qty) || 0) * (parseFloat(form.unitPrice) || 0);
 
@@ -223,11 +224,12 @@ export default function AddB2B() {
 
   function validate() {
     const e = {};
-    if (!form.customer.trim())                               e.customer    = true;
-    if (!form.company.trim())                                e.company     = true;
-    if (!form.invoice.trim())                                e.invoice     = true;
-    if (!form.invoiceDate)                                   e.invoiceDate = true;
-    if (!form.qty || isNaN(form.qty) || Number(form.qty) <= 0) e.qty      = true;
+    if (!form.customer.trim())                                  e.customer    = true;
+    if (!form.company.trim())                                   e.company     = true;
+    if (!form.invoice.trim())                                   e.invoice     = true;
+    if (!form.invoiceDate)                                      e.invoiceDate = true;
+    if (!form.qty || isNaN(form.qty) || Number(form.qty) <= 0) e.qty         = true;
+    if (!form.dueDate)                                          e.dueDate     = true;
     return e;
   }
 
@@ -274,23 +276,102 @@ export default function AddB2B() {
       console.error("Failed to save to DB:", err);
     }
 
+    const newId = transactions.length + 1;
     addTransaction(entry);
-    setSuccess(true);
-    setTimeout(() => { setSuccess(false); setForm(emptyForm()); setErrors({}); }, 3000);
+    setSavedEntry({ ...entry, id: newId });
+    setMode("success");
+  }
+
+  function handleEditEntry() {
+    const f = savedEntry;
+    setForm({
+      customer:        f.customer        || "",
+      company:         f.company         || "",
+      productVariant:  f.productVariant  || f.product || "",
+      product:         f.product         || "",
+      sku:             f.sku             || "",
+      invoice:         f.invoice         || "",
+      invoiceDate:     f.invoiceDate     || "",
+      qty:             String(f.qty      ?? ""),
+      unitPrice:       String(f.unitPrice ?? ""),
+      currency:        f.currency        || "USD",
+      paymentTerms:    f.paymentTerms    || "",
+      dueDate:         f.dueDate         || "",
+      orderNo:         f.orderNo         || "",
+      status:          f.status          || "",
+      paymentRecDate:  f.paymentRecDate  || "",
+      shipmentDate:    f.shipmentDate    || "",
+      fulfilledMonth:  f.fulfilledMonth  || "",
+      paymentRecMonth: f.paymentRecMonth || "",
+      delivery:        f.delivery        || "Company",
+      remarks:         f.remarks         || "",
+      financeRemarks:  f.financeRemarks  || "",
+    });
+    setErrors({});
+    setMode("edit");
+  }
+
+  async function handleUpdate(e) {
+    e.preventDefault();
+    const errs = validate();
+    if (Object.keys(errs).length) { setErrors(errs); return; }
+
+    const updated = {
+      ...savedEntry,
+      customer:        form.customer.trim(),
+      company:         form.company.trim(),
+      product:         form.product.trim(),
+      invoice:         form.invoice.trim(),
+      invoiceDate:     form.invoiceDate,
+      sku:             form.sku.trim(),
+      qty:             Number(form.qty),
+      unitPrice:       parseFloat(form.unitPrice) || 0,
+      total,
+      currency:        form.currency || "USD",
+      paymentTerms:    form.paymentTerms || "Net 40",
+      dueDate:         form.dueDate,
+      orderNo:         form.orderNo,
+      status:          form.status || "Due",
+      paymentRecDate:  form.paymentRecDate,
+      shipmentDate:    form.shipmentDate,
+      fulfilledMonth:  form.fulfilledMonth,
+      paymentRecMonth: form.paymentRecMonth,
+      delivery:        form.delivery,
+      remarks:         form.remarks.trim(),
+      financeRemarks:  form.financeRemarks.trim(),
+    };
+
+    updateTransaction(savedEntry.id, updated);
+    setSavedEntry(updated);
+    setMode("success");
   }
 
   const errCls = (k) => errors[k] ? "border-red-300 focus:ring-red-300 focus:border-red-300" : "";
 
   // ── Success screen ───────────────────────────────────────────────────────
-  if (success) {
+  if (mode === "success") {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center">
+        <div className="text-center max-w-sm">
           <div className="w-14 h-14 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center mx-auto mb-4">
             <CheckCircle size={26} className="text-emerald-500" />
           </div>
-          <h2 className="text-base font-semibold text-gray-900 mb-1">Entry added</h2>
-          <p className="text-sm text-gray-400">Now visible across Dashboard, Transactions, and Client Tracker.</p>
+          <h2 className="text-base font-semibold text-gray-900 mb-1">Entry saved</h2>
+          <p className="text-sm text-gray-400 mb-6">Visible across Dashboard, Transactions, and Client Tracker.</p>
+          <div className="flex items-center justify-center gap-3">
+            <button
+              onClick={handleEditEntry}
+              className="px-4 py-2 border border-gray-200 bg-white text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              Edit this entry
+            </button>
+            <button
+              onClick={() => { setForm(emptyForm()); setErrors({}); setSavedEntry(null); setMode("add"); }}
+              className="px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-700 transition-colors"
+            >
+              Add another entry
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -302,12 +383,16 @@ export default function AddB2B() {
   return (
     <div className="max-w-screen-lg">
       <div className="mb-6">
-        <h1 className="text-xl font-semibold text-gray-900">New B2B Entry</h1>
-        <p className="text-sm text-gray-400 mt-0.5">Adds to Transactions, Dashboard, and Client Tracker.</p>
+        <h1 className="text-xl font-semibold text-gray-900">{mode === "edit" ? "Edit Entry" : "New B2B Entry"}</h1>
+        <p className="text-sm text-gray-400 mt-0.5">
+          {mode === "edit"
+            ? `Editing entry · Order ${savedEntry?.orderNo}`
+            : "Adds to Transactions, Dashboard, and Client Tracker."}
+        </p>
       </div>
 
       <div className="flex gap-8 items-start">
-        <form onSubmit={handleSubmit} className="flex-1 min-w-0 space-y-7">
+        <form onSubmit={mode === "edit" ? handleUpdate : handleSubmit} className="flex-1 min-w-0 space-y-7">
 
           {/* ── Who ── */}
           <div>
@@ -443,8 +528,9 @@ export default function AddB2B() {
                 </select>
               </div>
               <div>
-                <Label>Due date</Label>
-                <input type="date" value={form.dueDate} onChange={e => set("dueDate", e.target.value)} className={inp()} />
+                <Label req>Due date</Label>
+                <input type="date" value={form.dueDate} onChange={e => set("dueDate", e.target.value)} className={inp(errCls("dueDate"))} />
+                {errors.dueDate && <p className="text-xs text-red-400 mt-1">Required</p>}
               </div>
               <div>
                 <Label>Currency</Label>
@@ -524,10 +610,19 @@ export default function AddB2B() {
           {/* ── Submit ── */}
           <div className="flex items-center justify-between pt-2 pb-6">
             <p className="text-xs text-gray-400"><span className="text-red-400">*</span> required fields</p>
-            <button type="submit"
-              className="px-5 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-700 transition-colors">
-              Add entry
-            </button>
+            <div className="flex items-center gap-3">
+              {mode === "edit" && (
+                <button type="button"
+                  onClick={() => setMode("success")}
+                  className="px-4 py-2.5 border border-gray-200 text-sm font-medium text-gray-600 rounded-lg hover:bg-gray-50 transition-colors">
+                  Cancel
+                </button>
+              )}
+              <button type="submit"
+                className="px-5 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-700 transition-colors">
+                {mode === "edit" ? "Update entry" : "Add entry"}
+              </button>
+            </div>
           </div>
 
         </form>
