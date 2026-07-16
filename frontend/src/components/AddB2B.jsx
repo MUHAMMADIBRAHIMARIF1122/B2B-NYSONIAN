@@ -1,16 +1,13 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { useData } from "../context/DataContext";
-import { CheckCircle, ChevronDown, UserCheck, Package } from "lucide-react";
+import { CheckCircle, ChevronDown, UserCheck, Package, PlusCircle, X } from "lucide-react";
 import StatusBadge from "./StatusBadge";
-import { productCatalog, productForSku, colorForSku } from "../data/products";
+import { productCatalog, colorForSku } from "../data/products";
 
 const PAYMENT_TERMS = ["Net 0", "Net 30", "Net 40", "Net 45", "Net 60"];
 const STATUSES      = ["Received", "Paid", "Partially Received", "Due"];
 const DELIVERY      = ["Company", "Self"];
-const CURRENCIES    = [
-  "USD", "GBP", "EUR", "CAD", "AUD",
-  "NZD", "SGD", "HKD", "JPY", "CHF",
-];
+const CURRENCIES    = ["USD", "GBP", "EUR", "CAD", "AUD", "NZD", "SGD", "HKD", "JPY", "CHF"];
 const MONTHS        = [
   "", "June-2025", "July-2025", "August-2025", "September-2025",
   "October-2025", "November-2025", "December-2025",
@@ -19,20 +16,18 @@ const MONTHS        = [
   "August-2026", "September-2026", "October-2026",
 ];
 
-// ── Order number generator ──────────────────────────────────────────────────
+// ── Order number generator ────────────────────────────────────────────────────
 function generateOrderNo() {
   const now   = new Date();
   const yy    = String(now.getFullYear()).slice(2);
   const mm    = String(now.getMonth() + 1).padStart(2, "0");
   const dd    = String(now.getDate()).padStart(2, "0");
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no ambiguous 0/O/1/I
-  const rand  = Array.from({ length: 4 }, () =>
-    chars[Math.floor(Math.random() * chars.length)]
-  ).join("");
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  const rand  = Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
   return `MO-${yy}${mm}${dd}-${rand}`;
 }
 
-// ── Autocomplete input ──────────────────────────────────────────────────────
+// ── Autocomplete input ────────────────────────────────────────────────────────
 function AutocompleteInput({ value, onChange, onSelect, options, placeholder, error, icon: Icon = UserCheck }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
@@ -51,10 +46,6 @@ function AutocompleteInput({ value, onChange, onSelect, options, placeholder, er
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const inputCls = `w-full px-3 py-2 bg-white border rounded-lg text-sm text-gray-800 placeholder-gray-300
-    focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 transition-shadow pr-8
-    ${error ? "border-red-300 focus:ring-red-300 focus:border-red-300" : "border-gray-200"}`;
-
   return (
     <div ref={ref} className="relative">
       <input
@@ -63,19 +54,17 @@ function AutocompleteInput({ value, onChange, onSelect, options, placeholder, er
         placeholder={placeholder}
         onChange={e => { onChange(e.target.value); setOpen(true); }}
         onFocus={() => setOpen(true)}
-        className={inputCls}
+        className={`w-full px-3 py-2 bg-white border rounded-lg text-sm text-gray-800 placeholder-gray-300
+          focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 transition-shadow pr-8
+          ${error ? "border-red-300 focus:ring-red-300 focus:border-red-300" : "border-gray-200"}`}
       />
       <ChevronDown size={13} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-300 pointer-events-none" />
-
       {open && filtered.length > 0 && (
         <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-30 overflow-y-auto max-h-60">
           {filtered.map(opt => (
-            <button
-              key={opt}
-              type="button"
+            <button key={opt} type="button"
               onMouseDown={() => { onSelect(opt); setOpen(false); }}
-              className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 flex items-center gap-2 transition-colors"
-            >
+              className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 flex items-center gap-2 transition-colors">
               <Icon size={12} className="text-gray-300 shrink-0" />
               {opt}
             </button>
@@ -86,10 +75,10 @@ function AutocompleteInput({ value, onChange, onSelect, options, placeholder, er
   );
 }
 
-// ── Helpers ─────────────────────────────────────────────────────────────────
-const fmt    = (n) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n);
-const inp    = (err = "") => `w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 transition-shadow ${err}`;
-const sel    = () => `w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400`;
+// ── Helpers ───────────────────────────────────────────────────────────────────
+const fmt = (n) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n);
+const inp = (err = "") => `w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 transition-shadow ${err}`;
+const sel = () => `w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400`;
 
 function Label({ children, req }) {
   return (
@@ -101,13 +90,17 @@ function Label({ children, req }) {
 function Divider({ title }) {
   return <p className="text-sm font-semibold text-gray-700 mb-4 pt-2">{title}</p>;
 }
+function FieldError({ msg }) {
+  return <p className="text-xs text-red-400 mt-1">{msg || "Required"}</p>;
+}
+
+// ── Empty helpers ─────────────────────────────────────────────────────────────
+const emptyLineItem = () => ({ productVariant: "", product: "", sku: "", qty: "", unitPrice: "" });
 
 const emptyForm = () => ({
   customer: "", company: "",
-  productVariant: "",   // display value: "Product — Color"
-  product: "",          // just product name, saved to DB
-  sku: "",
-  invoice: "", invoiceDate: "", qty: "", unitPrice: "",
+  lineItems: [emptyLineItem()],
+  invoice: "", invoiceDate: "",
   currency: "USD",
   paymentTerms: "", dueDate: "", orderNo: generateOrderNo(),
   status: "", paymentRecDate: "", shipmentDate: "",
@@ -115,51 +108,35 @@ const emptyForm = () => ({
   delivery: "Company", remarks: "", financeRemarks: "",
 });
 
-// ── Main component ───────────────────────────────────────────────────────────
+// ── Main component ────────────────────────────────────────────────────────────
 export default function AddB2B() {
   const { addTransaction, updateTransaction, transactions } = useData();
   const [form,       setForm]       = useState(emptyForm);
   const [errors,     setErrors]     = useState({});
-  const [mode,       setMode]       = useState("add");   // "add" | "success" | "edit"
+  const [mode,       setMode]       = useState("add"); // "add" | "success" | "edit"
   const [savedEntry, setSavedEntry] = useState(null);
 
-  const total = (parseFloat(form.qty) || 0) * (parseFloat(form.unitPrice) || 0);
+  // Grand total across all line items
+  const total = form.lineItems.reduce(
+    (sum, item) => sum + (parseFloat(item.qty) || 0) * (parseFloat(item.unitPrice) || 0), 0
+  );
 
-  // Build unique customer and company lists from existing transactions
   const customerOptions = useMemo(() =>
-    [...new Set(transactions.map(t => t.customer).filter(Boolean))].sort(),
-    [transactions]
-  );
+    [...new Set(transactions.map(t => t.customer).filter(Boolean))].sort(), [transactions]);
   const companyOptions = useMemo(() =>
-    [...new Set(transactions.map(t => t.company).filter(Boolean))].sort(),
-    [transactions]
-  );
-
-  // Combined "Product — Color" options from full catalog (sorted)
+    [...new Set(transactions.map(t => t.company).filter(Boolean))].sort(), [transactions]);
   const productVariantOptions = useMemo(() =>
-    [...new Set(productCatalog.map(e => `${e.product} — ${e.color}`))].sort(),
-    []
-  );
-
-  // All SKUs (sorted)
+    [...new Set(productCatalog.map(e => `${e.product} — ${e.color}`))].sort(), []);
   const skuOptions = useMemo(() =>
-    [...new Set(productCatalog.map(e => e.sku))].sort(),
-    []
-  );
+    [...new Set(productCatalog.map(e => e.sku))].sort(), []);
 
-  // Look up most recent profile for a given customer
   function getCustomerProfile(name) {
-    const matches = transactions
-      .filter(t => t.customer.toLowerCase() === name.toLowerCase())
-      .sort((a, b) => b.id - a.id); // most recent first
-    return matches[0] || null;
+    return transactions.filter(t => t.customer.toLowerCase() === name.toLowerCase())
+      .sort((a, b) => b.id - a.id)[0] || null;
   }
-
   function getCompanyProfile(name) {
-    const matches = transactions
-      .filter(t => t.company.toLowerCase() === name.toLowerCase())
-      .sort((a, b) => b.id - a.id);
-    return matches[0] || null;
+    return transactions.filter(t => t.company.toLowerCase() === name.toLowerCase())
+      .sort((a, b) => b.id - a.id)[0] || null;
   }
 
   function set(key, val) {
@@ -167,38 +144,63 @@ export default function AddB2B() {
     if (errors[key]) setErrors(e => ({ ...e, [key]: false }));
   }
 
-  // When a "Product — Color" option is selected from the product dropdown
-  function handleVariantSelect(label) {
+  // ── Line item handlers ────────────────────────────────────────────────────
+  function addLineItem() {
+    setForm(f => ({ ...f, lineItems: [...f.lineItems, emptyLineItem()] }));
+  }
+
+  function removeLineItem(idx) {
+    setForm(f => ({ ...f, lineItems: f.lineItems.filter((_, i) => i !== idx) }));
+    setErrors(e => {
+      const next = { ...e };
+      delete next[`li_${idx}_qty`];
+      return next;
+    });
+  }
+
+  function updateLineItem(idx, key, val) {
+    setForm(f => ({
+      ...f,
+      lineItems: f.lineItems.map((item, i) => i === idx ? { ...item, [key]: val } : item),
+    }));
+    if (errors[`li_${idx}_${key}`]) setErrors(e => ({ ...e, [`li_${idx}_${key}`]: false }));
+  }
+
+  function handleVariantSelect(idx, label) {
     const entry = productCatalog.find(e => `${e.product} — ${e.color}` === label);
     setForm(f => ({
       ...f,
-      productVariant: label,
-      product: entry ? entry.product : label,
-      sku:     entry ? entry.sku     : f.sku,
+      lineItems: f.lineItems.map((item, i) => i !== idx ? item : {
+        ...item,
+        productVariant: label,
+        product:        entry ? entry.product : label,
+        sku:            entry ? entry.sku     : item.sku,
+      }),
     }));
   }
 
-  // When a SKU is typed manually — back-fill product+color
-  function handleSkuChange(v) {
+  function handleSkuChange(idx, v) {
     const entry = productCatalog.find(e => e.sku.toLowerCase() === v.trim().toLowerCase());
     setForm(f => ({
       ...f,
-      sku:            v,
-      product:        entry ? entry.product                    : f.product,
-      productVariant: entry ? `${entry.product} — ${entry.color}` : f.productVariant,
+      lineItems: f.lineItems.map((item, i) => i !== idx ? item : {
+        ...item,
+        sku:            v,
+        product:        entry ? entry.product                       : item.product,
+        productVariant: entry ? `${entry.product} — ${entry.color}` : item.productVariant,
+      }),
     }));
   }
 
-  // When an existing customer is selected from dropdown
+  // ── Customer / company select ─────────────────────────────────────────────
   function handleCustomerSelect(name) {
     const profile = getCustomerProfile(name);
     if (profile) {
       setForm(f => ({
-        ...f,
-        customer:     name,
-        company:      profile.company     || f.company,
+        ...f, customer: name,
+        company:      profile.company      || f.company,
         paymentTerms: profile.paymentTerms || f.paymentTerms,
-        delivery:     profile.delivery    || f.delivery,
+        delivery:     profile.delivery     || f.delivery,
       }));
     } else {
       set("customer", name);
@@ -206,15 +208,13 @@ export default function AddB2B() {
     if (errors.customer) setErrors(e => ({ ...e, customer: false }));
   }
 
-  // When an existing company is selected from dropdown
   function handleCompanySelect(name) {
     const profile = getCompanyProfile(name);
     if (profile) {
       setForm(f => ({
-        ...f,
-        company:      name,
+        ...f, company: name,
         paymentTerms: f.paymentTerms || profile.paymentTerms || "",
-        delivery:     f.delivery    || profile.delivery    || "Company",
+        delivery:     f.delivery    || profile.delivery     || "Company",
       }));
     } else {
       set("company", name);
@@ -222,32 +222,31 @@ export default function AddB2B() {
     if (errors.company) setErrors(e => ({ ...e, company: false }));
   }
 
+  // ── Validation ────────────────────────────────────────────────────────────
   function validate() {
     const e = {};
-    if (!form.customer.trim())                                  e.customer    = true;
-    if (!form.company.trim())                                   e.company     = true;
-    if (!form.invoice.trim())                                   e.invoice     = true;
-    if (!form.invoiceDate)                                      e.invoiceDate = true;
-    if (!form.qty || isNaN(form.qty) || Number(form.qty) <= 0) e.qty         = true;
-    if (!form.dueDate)                                          e.dueDate     = true;
+    if (!form.customer.trim())  e.customer    = true;
+    if (!form.company.trim())   e.company     = true;
+    if (!form.invoice.trim())   e.invoice     = true;
+    if (!form.invoiceDate)      e.invoiceDate = true;
+    if (!form.dueDate)          e.dueDate     = true;
+    form.lineItems.forEach((item, idx) => {
+      if (!item.qty || isNaN(item.qty) || Number(item.qty) <= 0) e[`li_${idx}_qty`] = true;
+    });
     return e;
   }
 
+  // ── Submit (add) ──────────────────────────────────────────────────────────
   async function handleSubmit(e) {
     e.preventDefault();
     const errs = validate();
     if (Object.keys(errs).length) { setErrors(errs); return; }
 
-    const entry = {
+    const header = {
       customer:        form.customer.trim(),
       company:         form.company.trim(),
-      product:         form.product.trim(),
       invoice:         form.invoice.trim(),
       invoiceDate:     form.invoiceDate,
-      sku:             form.sku.trim(),
-      qty:             Number(form.qty),
-      unitPrice:       parseFloat(form.unitPrice) || 0,
-      total,
       currency:        form.currency || "USD",
       paymentTerms:    form.paymentTerms || "Net 40",
       dueDate:         form.dueDate,
@@ -263,37 +262,41 @@ export default function AddB2B() {
       closedWon:       "",
     };
 
-    try {
-      await fetch("/api/b2b-entries", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": import.meta.env.VITE_API_KEY || "",
-        },
-        body: JSON.stringify(entry),
-      });
-    } catch (err) {
-      console.error("Failed to save to DB:", err);
+    const entries = form.lineItems.map(item => ({
+      ...header,
+      product:   item.product.trim(),
+      sku:       item.sku.trim(),
+      qty:       Number(item.qty),
+      unitPrice: parseFloat(item.unitPrice) || 0,
+      total:     Number(((parseFloat(item.qty) || 0) * (parseFloat(item.unitPrice) || 0)).toFixed(2)),
+    }));
+
+    for (const entry of entries) {
+      try {
+        await fetch("/api/b2b-entries", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "x-api-key": import.meta.env.VITE_API_KEY || "" },
+          body: JSON.stringify(entry),
+        });
+      } catch (err) {
+        console.error("Failed to save to DB:", err);
+      }
+      addTransaction(entry);
     }
 
-    const newId = transactions.length + 1;
-    addTransaction(entry);
-    setSavedEntry({ ...entry, id: newId });
+    setSavedEntry({ ...header, lineItems: form.lineItems, id: transactions.length + 1 });
     setMode("success");
   }
 
+  // ── Edit entry ────────────────────────────────────────────────────────────
   function handleEditEntry() {
     const f = savedEntry;
     setForm({
       customer:        f.customer        || "",
       company:         f.company         || "",
-      productVariant:  f.productVariant  || f.product || "",
-      product:         f.product         || "",
-      sku:             f.sku             || "",
+      lineItems:       f.lineItems       || [emptyLineItem()],
       invoice:         f.invoice         || "",
       invoiceDate:     f.invoiceDate     || "",
-      qty:             String(f.qty      ?? ""),
-      unitPrice:       String(f.unitPrice ?? ""),
       currency:        f.currency        || "USD",
       paymentTerms:    f.paymentTerms    || "",
       dueDate:         f.dueDate         || "",
@@ -311,22 +314,17 @@ export default function AddB2B() {
     setMode("edit");
   }
 
+  // ── Update (edit) ─────────────────────────────────────────────────────────
   async function handleUpdate(e) {
     e.preventDefault();
     const errs = validate();
     if (Object.keys(errs).length) { setErrors(errs); return; }
 
-    const updated = {
-      ...savedEntry,
+    const header = {
       customer:        form.customer.trim(),
       company:         form.company.trim(),
-      product:         form.product.trim(),
       invoice:         form.invoice.trim(),
       invoiceDate:     form.invoiceDate,
-      sku:             form.sku.trim(),
-      qty:             Number(form.qty),
-      unitPrice:       parseFloat(form.unitPrice) || 0,
-      total,
       currency:        form.currency || "USD",
       paymentTerms:    form.paymentTerms || "Net 40",
       dueDate:         form.dueDate,
@@ -341,15 +339,26 @@ export default function AddB2B() {
       financeRemarks:  form.financeRemarks.trim(),
     };
 
+    const firstItem = form.lineItems[0];
+    const updated = {
+      ...savedEntry, ...header,
+      product:   firstItem.product.trim(),
+      sku:       firstItem.sku.trim(),
+      qty:       Number(firstItem.qty),
+      unitPrice: parseFloat(firstItem.unitPrice) || 0,
+      total:     Number(((parseFloat(firstItem.qty) || 0) * (parseFloat(firstItem.unitPrice) || 0)).toFixed(2)),
+    };
+
     updateTransaction(savedEntry.id, updated);
-    setSavedEntry(updated);
+    setSavedEntry({ ...updated, lineItems: form.lineItems });
     setMode("success");
   }
 
   const errCls = (k) => errors[k] ? "border-red-300 focus:ring-red-300 focus:border-red-300" : "";
 
-  // ── Success screen ───────────────────────────────────────────────────────
+  // ── Success screen ────────────────────────────────────────────────────────
   if (mode === "success") {
+    const itemCount = savedEntry?.lineItems?.length || 1;
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center max-w-sm">
@@ -357,18 +366,17 @@ export default function AddB2B() {
             <CheckCircle size={26} className="text-emerald-500" />
           </div>
           <h2 className="text-base font-semibold text-gray-900 mb-1">Entry saved</h2>
+          <p className="text-sm text-gray-400 mb-1">
+            {itemCount} line item{itemCount !== 1 ? "s" : ""} · INV {savedEntry?.invoice}
+          </p>
           <p className="text-sm text-gray-400 mb-6">Visible across Dashboard, Transactions, and Client Tracker.</p>
           <div className="flex items-center justify-center gap-3">
-            <button
-              onClick={handleEditEntry}
-              className="px-4 py-2 border border-gray-200 bg-white text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-            >
+            <button onClick={handleEditEntry}
+              className="px-4 py-2 border border-gray-200 bg-white text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
               Edit this entry
             </button>
-            <button
-              onClick={() => { setForm(emptyForm()); setErrors({}); setSavedEntry(null); setMode("add"); }}
-              className="px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-700 transition-colors"
-            >
+            <button onClick={() => { setForm(emptyForm()); setErrors({}); setSavedEntry(null); setMode("add"); }}
+              className="px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-700 transition-colors">
               Add another entry
             </button>
           </div>
@@ -377,9 +385,9 @@ export default function AddB2B() {
     );
   }
 
-  const hasPreview = form.company || form.customer || form.invoice || form.productVariant || total > 0;
+  const hasPreview = form.company || form.customer || form.invoice || form.lineItems.some(li => li.product || li.productVariant) || total > 0;
 
-  // ── Form ─────────────────────────────────────────────────────────────────
+  // ── Form ──────────────────────────────────────────────────────────────────
   return (
     <div className="max-w-screen-lg">
       <div className="mb-6">
@@ -400,31 +408,19 @@ export default function AddB2B() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label req>Customer name</Label>
-                <AutocompleteInput
-                  value={form.customer}
-                  onChange={v => set("customer", v)}
-                  onSelect={handleCustomerSelect}
-                  options={customerOptions}
-                  placeholder="Jerry Kallman"
-                  error={errors.customer}
-                />
-                {errors.customer && <p className="text-xs text-red-400 mt-1">Required</p>}
+                <AutocompleteInput value={form.customer} onChange={v => set("customer", v)}
+                  onSelect={handleCustomerSelect} options={customerOptions}
+                  placeholder="Jerry Kallman" error={errors.customer} />
+                {errors.customer && <FieldError />}
               </div>
               <div>
                 <Label req>Company</Label>
-                <AutocompleteInput
-                  value={form.company}
-                  onChange={v => set("company", v)}
-                  onSelect={handleCompanySelect}
-                  options={companyOptions}
-                  placeholder="Airline International"
-                  error={errors.company}
-                />
-                {errors.company && <p className="text-xs text-red-400 mt-1">Required</p>}
+                <AutocompleteInput value={form.company} onChange={v => set("company", v)}
+                  onSelect={handleCompanySelect} options={companyOptions}
+                  placeholder="Airline International" error={errors.company} />
+                {errors.company && <FieldError />}
               </div>
             </div>
-
-            {/* Auto-filled notice */}
             {(form.customer && getCustomerProfile(form.customer)) && (
               <div className="mt-2 flex items-center gap-1.5 text-xs text-indigo-600">
                 <UserCheck size={12} />
@@ -435,83 +431,124 @@ export default function AddB2B() {
 
           <div className="border-t border-gray-100" />
 
-          {/* ── Product ── */}
+          {/* ── Invoice header ── */}
           <div>
-            <Divider title="What are they buying?" />
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <div>
-                <Label>Product &amp; Colour</Label>
-                <AutocompleteInput
-                  value={form.productVariant}
-                  onChange={v => {
-                    setForm(f => ({ ...f, productVariant: v, product: v, sku: "" }));
-                  }}
-                  onSelect={handleVariantSelect}
-                  options={productVariantOptions}
-                  placeholder="Carry-On: All-in-One — Forest Green"
-                  icon={Package}
-                />
-                {form.product && (
-                  <p className="text-[11px] text-gray-400 mt-1 truncate">{form.product}</p>
-                )}
-              </div>
-              <div>
-                <Label>SKU</Label>
-                <AutocompleteInput
-                  value={form.sku}
-                  onChange={v => handleSkuChange(v)}
-                  onSelect={v => handleSkuChange(v)}
-                  options={skuOptions}
-                  placeholder="AllG1"
-                  icon={Package}
-                />
-                {form.sku && colorForSku(form.sku) && (
-                  <p className="text-[11px] text-indigo-500 mt-1 font-medium">
-                    {colorForSku(form.sku)} · auto-filled from SKU
-                  </p>
-                )}
-              </div>
-            </div>
-            <div className="grid grid-cols-3 gap-4 mb-4">
+            <Divider title="Invoice details" />
+            <div className="grid grid-cols-3 gap-4">
               <div>
                 <Label req>Invoice #</Label>
                 <input value={form.invoice} onChange={e => set("invoice", e.target.value)}
                   placeholder="1020" className={inp(errCls("invoice"))} />
+                {errors.invoice && <FieldError />}
               </div>
               <div>
                 <Label req>Invoice date</Label>
                 <input type="date" value={form.invoiceDate} onChange={e => set("invoiceDate", e.target.value)}
                   className={inp(errCls("invoiceDate"))} />
+                {errors.invoiceDate && <FieldError />}
               </div>
               <div>
                 <Label>Order #</Label>
-                <input
-                  value={form.orderNo}
-                  readOnly
-                  className="w-full px-3 py-2 bg-gray-50 border border-gray-100 rounded-lg text-sm font-mono text-indigo-700 font-semibold focus:outline-none cursor-default"
-                />
+                <input value={form.orderNo} readOnly
+                  className="w-full px-3 py-2 bg-gray-50 border border-gray-100 rounded-lg text-sm font-mono text-indigo-700 font-semibold focus:outline-none cursor-default" />
                 <p className="text-[11px] text-gray-400 mt-1">Auto-generated · unique per entry</p>
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <Label req>Quantity</Label>
-                <input type="number" min="1" value={form.qty} onChange={e => set("qty", e.target.value)}
-                  placeholder="0" className={inp(errCls("qty"))} />
-              </div>
-              <div>
-                <Label>Unit price</Label>
-                <input type="number" min="0" step="0.01" value={form.unitPrice}
-                  onChange={e => set("unitPrice", e.target.value)}
-                  placeholder="0.00" className={inp()} />
-              </div>
-              <div>
-                <Label>Total</Label>
-                <div className="w-full px-3 py-2 bg-gray-50 border border-gray-100 rounded-lg text-sm font-semibold text-gray-700 h-[38px] flex items-center">
-                  {total > 0 ? fmt(total) : <span className="text-gray-300 font-normal text-xs">auto-calculated</span>}
+          </div>
+
+          <div className="border-t border-gray-100" />
+
+          {/* ── Line items ── */}
+          <div>
+            <Divider title="What are they buying?" />
+
+            {form.lineItems.map((item, idx) => {
+              const lineTotal = (parseFloat(item.qty) || 0) * (parseFloat(item.unitPrice) || 0);
+              return (
+                <div key={idx} className="mb-3 p-4 border border-gray-100 rounded-xl bg-gray-50/30 relative">
+                  {form.lineItems.length > 1 && (
+                    <button type="button" onClick={() => removeLineItem(idx)}
+                      className="absolute top-3 right-3 text-gray-300 hover:text-red-400 transition-colors">
+                      <X size={14} />
+                    </button>
+                  )}
+                  {form.lineItems.length > 1 && (
+                    <p className="text-[11px] font-semibold text-gray-400 mb-3">Line item {idx + 1}</p>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-3 mb-3">
+                    <div>
+                      <Label>Product &amp; Colour</Label>
+                      <AutocompleteInput
+                        value={item.productVariant}
+                        onChange={v => updateLineItem(idx, "productVariant", v)}
+                        onSelect={label => handleVariantSelect(idx, label)}
+                        options={productVariantOptions}
+                        placeholder="Carry-On: All-in-One — Forest Green"
+                        icon={Package}
+                      />
+                      {item.product && <p className="text-[11px] text-gray-400 mt-1 truncate">{item.product}</p>}
+                    </div>
+                    <div>
+                      <Label>SKU</Label>
+                      <AutocompleteInput
+                        value={item.sku}
+                        onChange={v => handleSkuChange(idx, v)}
+                        onSelect={v => handleSkuChange(idx, v)}
+                        options={skuOptions}
+                        placeholder="AllG1"
+                        icon={Package}
+                      />
+                      {item.sku && colorForSku(item.sku) && (
+                        <p className="text-[11px] text-indigo-500 mt-1 font-medium">
+                          {colorForSku(item.sku)} · auto-filled from SKU
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-3">
+                    <div>
+                      <Label req>Quantity</Label>
+                      <input type="number" min="1" value={item.qty}
+                        onChange={e => updateLineItem(idx, "qty", e.target.value)}
+                        placeholder="0"
+                        className={inp(errors[`li_${idx}_qty`] ? "border-red-300 focus:ring-red-300 focus:border-red-300" : "")} />
+                      {errors[`li_${idx}_qty`] && <FieldError />}
+                    </div>
+                    <div>
+                      <Label>Unit price</Label>
+                      <input type="number" min="0" step="0.01" value={item.unitPrice}
+                        onChange={e => updateLineItem(idx, "unitPrice", e.target.value)}
+                        placeholder="0.00" className={inp()} />
+                    </div>
+                    <div>
+                      <Label>Line total</Label>
+                      <div className="w-full px-3 py-2 bg-white border border-gray-100 rounded-lg text-sm font-semibold text-gray-700 h-[38px] flex items-center">
+                        {lineTotal > 0
+                          ? fmt(lineTotal)
+                          : <span className="text-gray-300 font-normal text-xs">auto-calculated</span>}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+
+            <button type="button" onClick={addLineItem}
+              className="w-full py-2.5 border border-dashed border-indigo-200 rounded-xl text-sm text-indigo-500 hover:bg-indigo-50 transition-colors flex items-center justify-center gap-2">
+              <PlusCircle size={14} />
+              Add line item
+            </button>
+
+            {form.lineItems.length > 1 && total > 0 && (
+              <div className="flex justify-end mt-3 pr-1">
+                <div className="text-right">
+                  <p className="text-xs text-gray-400 mb-0.5">Invoice total ({form.lineItems.length} items)</p>
+                  <p className="text-2xl font-bold text-gray-900">{fmt(total)}</p>
                 </div>
               </div>
-            </div>
+            )}
           </div>
 
           <div className="border-t border-gray-100" />
@@ -529,8 +566,9 @@ export default function AddB2B() {
               </div>
               <div>
                 <Label req>Due date</Label>
-                <input type="date" value={form.dueDate} onChange={e => set("dueDate", e.target.value)} className={inp(errCls("dueDate"))} />
-                {errors.dueDate && <p className="text-xs text-red-400 mt-1">Required</p>}
+                <input type="date" value={form.dueDate} onChange={e => set("dueDate", e.target.value)}
+                  className={inp(errCls("dueDate"))} />
+                {errors.dueDate && <FieldError />}
               </div>
               <div>
                 <Label>Currency</Label>
@@ -595,14 +633,12 @@ export default function AddB2B() {
               <div>
                 <Label>Remarks</Label>
                 <textarea value={form.remarks} onChange={e => set("remarks", e.target.value)}
-                  placeholder="Anything worth noting…" rows={3}
-                  className={`${inp()} resize-none`} />
+                  placeholder="Anything worth noting…" rows={3} className={`${inp()} resize-none`} />
               </div>
               <div>
                 <Label>Finance remarks</Label>
                 <textarea value={form.financeRemarks} onChange={e => set("financeRemarks", e.target.value)}
-                  placeholder="e.g. bad debt, June-2026…" rows={3}
-                  className={`${inp()} resize-none`} />
+                  placeholder="e.g. bad debt, June-2026…" rows={3} className={`${inp()} resize-none`} />
               </div>
             </div>
           </div>
@@ -612,8 +648,7 @@ export default function AddB2B() {
             <p className="text-xs text-gray-400"><span className="text-red-400">*</span> required fields</p>
             <div className="flex items-center gap-3">
               {mode === "edit" && (
-                <button type="button"
-                  onClick={() => setMode("success")}
+                <button type="button" onClick={() => setMode("success")}
                   className="px-4 py-2.5 border border-gray-200 text-sm font-medium text-gray-600 rounded-lg hover:bg-gray-50 transition-colors">
                   Cancel
                 </button>
@@ -654,22 +689,33 @@ export default function AddB2B() {
                   </div>
                 )}
 
-                {(form.productVariant || form.product) && (
-                  <div>
-                    <p className="text-xs text-gray-700 font-medium truncate">
-                      {form.productVariant || form.product}
-                    </p>
-                    {form.sku && (
-                      <p className="text-[11px] font-mono text-gray-400 mt-0.5">{form.sku}</p>
-                    )}
+                {/* Line items preview */}
+                {form.lineItems.some(li => li.product || li.productVariant) && (
+                  <div className="space-y-1.5">
+                    {form.lineItems.filter(li => li.product || li.productVariant).map((li, i) => (
+                      <div key={i} className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="text-xs text-gray-700 font-medium truncate">{li.productVariant || li.product}</p>
+                          {li.sku && <p className="text-[10px] font-mono text-gray-400">{li.sku}</p>}
+                        </div>
+                        {li.qty && li.unitPrice && (
+                          <p className="text-xs text-gray-500 shrink-0">{li.qty}×</p>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 )}
 
                 {total > 0 && (
                   <div className="pt-2 border-t border-gray-50">
                     <p className="text-2xl font-bold text-gray-900 tracking-tight">{fmt(total)}</p>
-                    {form.qty && form.unitPrice && (
-                      <p className="text-xs text-gray-400 mt-0.5">{form.qty} × {fmt(parseFloat(form.unitPrice))}</p>
+                    {form.lineItems.length === 1 && form.lineItems[0].qty && form.lineItems[0].unitPrice && (
+                      <p className="text-xs text-gray-400 mt-0.5">
+                        {form.lineItems[0].qty} × {fmt(parseFloat(form.lineItems[0].unitPrice))}
+                      </p>
+                    )}
+                    {form.lineItems.length > 1 && (
+                      <p className="text-xs text-gray-400 mt-0.5">{form.lineItems.length} line items</p>
                     )}
                   </div>
                 )}
