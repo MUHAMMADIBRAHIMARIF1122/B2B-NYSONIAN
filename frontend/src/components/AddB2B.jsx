@@ -126,16 +126,21 @@ export default function AddB2B() {
   const [saveError,  setSaveError]  = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
-  // Auto-generate next invoice number (INV-001 format) when form resets to empty
+  // Auto-generate next invoice number when form resets to empty.
+  // Scans all existing invoices (numeric "1012" or "INV-012") to find the true max.
   useEffect(() => {
     if (mode !== "add" || form.invoice !== "") return;
     if (transactions.length === 0) return;
-    const invNums = transactions
+    const nums = transactions
       .map(t => t.invoice)
-      .filter(inv => /^INV-\d+$/.test(inv))
-      .map(inv => parseInt(inv.split("-")[1], 10));
-    const max = invNums.length > 0 ? Math.max(...invNums) : 0;
-    setForm(f => ({ ...f, invoice: `INV-${String(max + 1).padStart(3, "0")}` }));
+      .map(inv => {
+        if (/^\d+$/.test(inv))        return parseInt(inv, 10);              // "1012"
+        if (/^INV-(\d+)$/i.test(inv)) return parseInt(inv.replace(/\D/g, ""), 10); // "INV-001"
+        return null;
+      })
+      .filter(n => n !== null && !isNaN(n));
+    const max = nums.length > 0 ? Math.max(...nums) : 1000;
+    setForm(f => ({ ...f, invoice: `${max + 1}` }));
   }, [mode, transactions]);
 
   // Grand total across all line items
