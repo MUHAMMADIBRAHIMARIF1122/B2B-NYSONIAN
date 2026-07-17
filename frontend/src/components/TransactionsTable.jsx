@@ -5,7 +5,7 @@ import { Search, ChevronUp, ChevronDown, ChevronsUpDown, Trash2, X, Pencil, Chec
 
 const fmt = (n) =>
   n === 0
-    ? <span className="text-gray-300 text-xs">Gift</span>
+    ? <span className="text-slate-600 text-xs">Gift</span>
     : new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n);
 
 const ALL = "All";
@@ -21,8 +21,8 @@ const MONTHS        = [
   "August-2026", "September-2026", "October-2026",
 ];
 
-const ei = "w-full min-w-[70px] bg-transparent border-b border-indigo-200 focus:border-indigo-500 outline-none text-sm py-0.5 placeholder-gray-300";
-const es = "w-full min-w-[80px] bg-transparent border-b border-indigo-200 focus:border-indigo-500 outline-none text-sm py-0.5 cursor-pointer";
+const ei = "w-full min-w-[70px] bg-transparent border-b border-indigo-700 focus:border-indigo-400 outline-none text-sm py-0.5 placeholder-slate-600 text-slate-100";
+const es = "w-full min-w-[80px] bg-transparent border-b border-indigo-700 focus:border-indigo-400 outline-none text-sm py-0.5 cursor-pointer text-slate-100";
 
 function EditInput({ val, onChange, type = "text", min }) {
   return <input type={type} value={val ?? ""} onChange={e => onChange(e.target.value)} min={min} className={ei} />;
@@ -135,35 +135,35 @@ export default function TransactionsTable() {
   }
 
   function SortIcon({ col }) {
-    if (sortKey !== col) return <ChevronsUpDown size={11} className="text-gray-300 ml-0.5 inline" />;
+    if (sortKey !== col) return <ChevronsUpDown size={11} className="text-slate-600 ml-0.5 inline" />;
     return sortDir === "asc"
-      ? <ChevronUp   size={11} className="text-indigo-500 ml-0.5 inline" />
-      : <ChevronDown size={11} className="text-indigo-500 ml-0.5 inline" />;
+      ? <ChevronUp   size={11} className="text-indigo-400 ml-0.5 inline" />
+      : <ChevronDown size={11} className="text-indigo-400 ml-0.5 inline" />;
   }
 
   const Th = ({ col, label, right }) => (
     <th onClick={() => handleSort(col)}
-      className={`px-3 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 whitespace-nowrap select-none transition-colors ${right ? "text-right" : "text-left"}`}>
+      className={`px-3 py-3 text-xs font-semibold text-slate-400 uppercase tracking-wider cursor-pointer hover:text-slate-200 whitespace-nowrap select-none transition-colors ${right ? "text-right" : "text-left"}`}>
       {label}<SortIcon col={col} />
     </th>
   );
 
-  const selectCls = "px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-400";
+  const selectCls = "px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500";
 
   return (
     <div className="space-y-4 max-w-screen-xl">
       <div>
-        <h1 className="text-xl font-semibold text-gray-900">Transactions</h1>
-        <p className="text-sm text-gray-400 mt-0.5">All B2B invoice line items</p>
+        <h1 className="text-xl font-semibold text-slate-100">Transactions</h1>
+        <p className="text-sm text-slate-400 mt-0.5">All B2B invoice line items</p>
       </div>
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3 items-center">
         <div className="relative w-full sm:flex-1 sm:min-w-[220px]">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
           <input type="text" placeholder="Search customer, product, SKU, invoice..."
             value={search} onChange={e => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white" />
+            className="w-full pl-9 pr-4 py-2 border border-slate-600 rounded-lg text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-slate-900" />
         </div>
         <select value={companyFilter} onChange={e => setCompanyFilter(e.target.value)} className={selectCls}>
           {companies.map(c => <option key={c}>{c}</option>)}
@@ -172,8 +172,8 @@ export default function TransactionsTable() {
           {statuses.map(s => <option key={s}>{s}</option>)}
         </select>
         <div className="flex items-center gap-2 text-sm sm:ml-auto">
-          <span className="text-gray-400">{filtered.length} rows</span>
-          <span className="px-3 py-1.5 rounded-lg bg-indigo-50 border border-indigo-100 text-indigo-700 font-semibold">
+          <span className="text-slate-400">{filtered.length} rows</span>
+          <span className="px-3 py-1.5 rounded-lg bg-indigo-900/30 border border-indigo-700/50 text-indigo-300 font-semibold">
             {new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(totalAmount)}
           </span>
         </div>
@@ -181,15 +181,15 @@ export default function TransactionsTable() {
 
       {/* Toolbar — edit mode */}
       {editingId && (
-        <div className="flex items-center gap-3 px-4 py-2.5 bg-indigo-50 border border-indigo-200 rounded-lg">
-          <span className="text-sm font-medium text-indigo-700">Editing row — make your changes directly in the table</span>
+        <div className="flex items-center gap-3 px-4 py-2.5 bg-indigo-900/30 border border-indigo-700 rounded-lg">
+          <span className="text-sm font-medium text-indigo-300">Editing row — make your changes directly in the table</span>
           <div className="ml-auto flex items-center gap-2">
             <button onClick={saveEdit}
               className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 text-white text-xs font-semibold rounded-lg hover:bg-indigo-700 transition-colors">
               <Check size={13} /> Save
             </button>
             <button onClick={cancelEdit}
-              className="px-3 py-1.5 text-xs font-medium text-gray-500 border border-gray-200 rounded-lg hover:bg-white transition-colors">
+              className="px-3 py-1.5 text-xs font-medium text-slate-400 border border-slate-600 rounded-lg hover:bg-slate-700 transition-colors">
               Cancel
             </button>
           </div>
@@ -198,36 +198,36 @@ export default function TransactionsTable() {
 
       {/* Toolbar — selection mode */}
       {someChecked && !editingId && (
-        <div className="flex items-center gap-3 px-4 py-2.5 bg-white border border-gray-200 rounded-lg shadow-sm">
-          <span className="text-sm font-medium text-gray-700">
+        <div className="flex items-center gap-3 px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-lg shadow-sm">
+          <span className="text-sm font-medium text-slate-300">
             {selCount} row{selCount !== 1 ? "s" : ""} selected
           </span>
           <div className="ml-auto flex items-center gap-2">
             {oneSelected && !confirmDel && (
               <button onClick={startEdit}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-indigo-600 border border-indigo-200 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors">
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-indigo-300 border border-indigo-700 bg-indigo-900/30 rounded-lg hover:bg-indigo-900/50 transition-colors">
                 <Pencil size={13} /> Edit row
               </button>
             )}
             {confirmDel ? (
               <>
-                <span className="text-sm text-red-600 font-medium">Delete {selCount} row{selCount !== 1 ? "s" : ""}? This can't be undone.</span>
+                <span className="text-sm text-red-400 font-medium">Delete {selCount} row{selCount !== 1 ? "s" : ""}? This can't be undone.</span>
                 <button onClick={handleDelete}
                   className="flex items-center gap-1.5 px-3 py-1.5 bg-red-600 text-white text-xs font-semibold rounded-lg hover:bg-red-700 transition-colors">
                   <Trash2 size={13} /> Yes, delete
                 </button>
                 <button onClick={() => setConfirmDel(false)}
-                  className="px-3 py-1.5 text-xs font-medium text-gray-500 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                  className="px-3 py-1.5 text-xs font-medium text-slate-400 border border-slate-600 rounded-lg hover:bg-slate-700 transition-colors">
                   Cancel
                 </button>
               </>
             ) : (
               <>
                 <button onClick={handleDelete}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-red-600 border border-red-200 bg-red-50 rounded-lg hover:bg-red-100 transition-colors">
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-red-400 border border-red-800 bg-red-900/30 rounded-lg hover:bg-red-900/50 transition-colors">
                   <Trash2 size={13} /> Delete
                 </button>
-                <button onClick={clearSelection} className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+                <button onClick={clearSelection} className="p-1.5 text-slate-500 hover:text-slate-300 hover:bg-slate-700 rounded-lg transition-colors">
                   <X size={14} />
                 </button>
               </>
@@ -237,16 +237,16 @@ export default function TransactionsTable() {
       )}
 
       {/* Table */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+      <div className="bg-slate-800 rounded-xl border border-slate-700 shadow-sm overflow-hidden">
         <div className="overflow-auto max-h-[calc(100vh-220px)]">
-          <table className="min-w-full divide-y divide-gray-100">
-            <thead className="bg-gray-50 sticky top-0 z-10 shadow-[0_1px_0_0_#e5e7eb]">
+          <table className="min-w-full divide-y divide-slate-700">
+            <thead className="bg-slate-900 sticky top-0 z-10 shadow-[0_1px_0_0_theme(colors.slate.700)]">
               <tr>
                 <th className="pl-4 pr-2 py-3 w-8">
                   <input type="checkbox" checked={allChecked}
                     ref={el => { if (el) el.indeterminate = someChecked && !allChecked; }}
                     onChange={toggleAll}
-                    className="w-3.5 h-3.5 rounded border-gray-300 accent-indigo-600 cursor-pointer" />
+                    className="w-3.5 h-3.5 rounded border-slate-600 accent-indigo-600 cursor-pointer" />
                 </th>
                 <Th col="customer"       label="Customer" />
                 <Th col="company"        label="Company" />
@@ -265,18 +265,18 @@ export default function TransactionsTable() {
                 <Th col="shipmentDate"   label="Ship Date" />
                 <Th col="delivery"       label="Delivery" />
                 <Th col="fulfilledMonth" label="Fulfilled Mo." />
-                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">Remarks</th>
-                <th className="px-3 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">Finance</th>
+                <th className="px-3 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider whitespace-nowrap">Remarks</th>
+                <th className="px-3 py-3 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider whitespace-nowrap">Finance</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-slate-700/50">
               {filtered.map((row, i) => {
                 const isSelected = selected.has(row.id);
                 const isEditing  = editingId === row.id;
 
                 if (isEditing) {
                   return (
-                    <tr key={row.id} className="bg-indigo-50/70 border-l-2 border-l-indigo-400">
+                    <tr key={row.id} className="bg-indigo-900/30 border-l-2 border-l-indigo-400">
                       <td className="pl-4 pr-2 py-2">
                         <div className="w-3.5 h-3.5 rounded bg-indigo-400 flex items-center justify-center">
                           <Pencil size={8} className="text-white" />
@@ -290,10 +290,10 @@ export default function TransactionsTable() {
                       <td className="px-3 py-2"><EditInput val={ef("sku")}         onChange={setEf("sku")} /></td>
                       <td className="px-3 py-2"><EditInput val={ef("qty")}         onChange={setEf("qty")} type="number" min="0" /></td>
                       <td className="px-3 py-2"><EditInput val={ef("unitPrice")}   onChange={setEf("unitPrice")} type="number" min="0" /></td>
-                      <td className="px-3 py-2 text-sm font-semibold text-indigo-600 whitespace-nowrap">
+                      <td className="px-3 py-2 text-sm font-semibold text-indigo-400 whitespace-nowrap">
                         {editTotal > 0
                           ? new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(editTotal)
-                          : <span className="text-gray-300 font-normal text-xs">auto</span>}
+                          : <span className="text-slate-600 font-normal text-xs">auto</span>}
                       </td>
                       <td className="px-3 py-2"><EditSelect val={ef("paymentTerms")} onChange={setEf("paymentTerms")} options={PAYMENT_TERMS} /></td>
                       <td className="px-3 py-2"><EditInput val={ef("dueDate")}       onChange={setEf("dueDate")} type="date" /></td>
@@ -311,33 +311,33 @@ export default function TransactionsTable() {
 
                 return (
                   <tr key={row.id}
-                    className={`tr-hover ${isSelected ? "bg-indigo-50/60" : i % 2 === 0 ? "bg-white" : "bg-gray-50/50"} ${editingId ? "opacity-40 pointer-events-none" : ""}`}>
+                    className={`tr-hover ${isSelected ? "bg-indigo-900/30" : i % 2 === 0 ? "bg-slate-800" : "bg-slate-800/50"} ${editingId ? "opacity-40 pointer-events-none" : ""}`}>
                     <td className="pl-4 pr-2 py-2.5">
                       <input type="checkbox" checked={isSelected} onChange={() => toggleRow(row.id)}
-                        className="w-3.5 h-3.5 rounded border-gray-300 accent-indigo-600 cursor-pointer" />
+                        className="w-3.5 h-3.5 rounded border-slate-600 accent-indigo-600 cursor-pointer" />
                     </td>
-                    <td className="px-3 py-2.5 text-sm font-medium text-gray-900 whitespace-nowrap">{row.customer}</td>
-                    <td className="px-3 py-2.5 text-sm text-gray-600 whitespace-nowrap">{row.company}</td>
-                    <td className="px-3 py-2.5 text-sm text-gray-600 max-w-[170px] truncate" title={row.product}>{row.product || <span className="text-gray-300">—</span>}</td>
-                    <td className="px-3 py-2.5 text-xs font-mono text-indigo-600 whitespace-nowrap font-semibold">{row.invoice}</td>
-                    <td className="px-3 py-2.5 text-sm text-gray-500 whitespace-nowrap">{row.invoiceDate}</td>
-                    <td className="px-3 py-2.5 text-xs font-mono text-gray-400 whitespace-nowrap">{row.sku}</td>
-                    <td className="px-3 py-2.5 text-sm text-right text-gray-700">{row.qty}</td>
-                    <td className="px-3 py-2.5 text-sm text-right text-gray-600">{row.unitPrice > 0 ? `$${row.unitPrice}` : <span className="text-gray-300">—</span>}</td>
-                    <td className="px-3 py-2.5 text-sm text-right font-semibold text-gray-900 whitespace-nowrap">{fmt(row.total)}</td>
-                    <td className="px-3 py-2.5 text-xs text-gray-500 whitespace-nowrap">{row.paymentTerms}</td>
-                    <td className="px-3 py-2.5 text-xs text-gray-500 whitespace-nowrap">{row.dueDate}</td>
-                    <td className="px-3 py-2.5 text-xs font-mono text-gray-400 whitespace-nowrap">{row.orderNo || "—"}</td>
+                    <td className="px-3 py-2.5 text-sm font-medium text-slate-100 whitespace-nowrap">{row.customer}</td>
+                    <td className="px-3 py-2.5 text-sm text-slate-400 whitespace-nowrap">{row.company}</td>
+                    <td className="px-3 py-2.5 text-sm text-slate-400 max-w-[170px] truncate" title={row.product}>{row.product || <span className="text-slate-600">—</span>}</td>
+                    <td className="px-3 py-2.5 text-xs font-mono text-indigo-400 whitespace-nowrap font-semibold">{row.invoice}</td>
+                    <td className="px-3 py-2.5 text-sm text-slate-500 whitespace-nowrap">{row.invoiceDate}</td>
+                    <td className="px-3 py-2.5 text-xs font-mono text-slate-500 whitespace-nowrap">{row.sku}</td>
+                    <td className="px-3 py-2.5 text-sm text-right text-slate-300">{row.qty}</td>
+                    <td className="px-3 py-2.5 text-sm text-right text-slate-400">{row.unitPrice > 0 ? `$${row.unitPrice}` : <span className="text-slate-600">—</span>}</td>
+                    <td className="px-3 py-2.5 text-sm text-right font-semibold text-slate-100 whitespace-nowrap">{fmt(row.total)}</td>
+                    <td className="px-3 py-2.5 text-xs text-slate-500 whitespace-nowrap">{row.paymentTerms}</td>
+                    <td className="px-3 py-2.5 text-xs text-slate-500 whitespace-nowrap">{row.dueDate}</td>
+                    <td className="px-3 py-2.5 text-xs font-mono text-slate-500 whitespace-nowrap">{row.orderNo || "—"}</td>
                     <td className="px-3 py-2.5 whitespace-nowrap"><StatusBadge status={row.status} /></td>
-                    <td className="px-3 py-2.5 text-xs text-gray-500 whitespace-nowrap">{row.paymentRecDate || "—"}</td>
-                    <td className="px-3 py-2.5 text-xs text-gray-500 whitespace-nowrap">{row.shipmentDate || "—"}</td>
-                    <td className="px-3 py-2.5 text-xs text-gray-500 whitespace-nowrap">{row.delivery}</td>
-                    <td className="px-3 py-2.5 text-xs text-gray-500 whitespace-nowrap">{row.fulfilledMonth || "—"}</td>
-                    <td className="px-3 py-2.5 text-xs text-gray-400 max-w-[130px] truncate" title={row.remarks}>{row.remarks || "—"}</td>
+                    <td className="px-3 py-2.5 text-xs text-slate-500 whitespace-nowrap">{row.paymentRecDate || "—"}</td>
+                    <td className="px-3 py-2.5 text-xs text-slate-500 whitespace-nowrap">{row.shipmentDate || "—"}</td>
+                    <td className="px-3 py-2.5 text-xs text-slate-500 whitespace-nowrap">{row.delivery}</td>
+                    <td className="px-3 py-2.5 text-xs text-slate-500 whitespace-nowrap">{row.fulfilledMonth || "—"}</td>
+                    <td className="px-3 py-2.5 text-xs text-slate-500 max-w-[130px] truncate" title={row.remarks}>{row.remarks || "—"}</td>
                     <td className="px-3 py-2.5 text-xs whitespace-nowrap">
                       {row.financeRemarks
-                        ? <span className={row.financeRemarks === "bad debt" ? "text-red-600 font-semibold" : "text-amber-600"}>{row.financeRemarks}</span>
-                        : <span className="text-gray-200">—</span>}
+                        ? <span className={row.financeRemarks === "bad debt" ? "text-red-400 font-semibold" : "text-amber-400"}>{row.financeRemarks}</span>
+                        : <span className="text-slate-700">—</span>}
                     </td>
                   </tr>
                 );
@@ -346,7 +346,7 @@ export default function TransactionsTable() {
           </table>
         </div>
         {filtered.length === 0 && (
-          <div className="text-center py-14 text-gray-400 text-sm">No results found.</div>
+          <div className="text-center py-14 text-slate-500 text-sm">No results found.</div>
         )}
       </div>
     </div>

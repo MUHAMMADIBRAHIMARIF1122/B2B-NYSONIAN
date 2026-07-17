@@ -25,19 +25,19 @@ const DELIVERY = ["Company", "Self"];
 // Module-level components prevent focus loss on re-render
 function StatusBadge({ status }) {
   if (status === "available") return (
-    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-700">
-      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-900/40 text-emerald-300 border border-emerald-700">
+      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
       Available
     </span>
   );
   if (status === "unavailable") return (
-    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-red-100 text-red-700">
-      <span className="w-1.5 h-1.5 rounded-full bg-red-500" />
+    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-red-900/40 text-red-300 border border-red-700">
+      <span className="w-1.5 h-1.5 rounded-full bg-red-400" />
       Not available
     </span>
   );
   return (
-    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100 text-amber-700">
+    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-900/40 text-amber-300 border border-amber-700">
       <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
       Pending review
     </span>
@@ -47,7 +47,7 @@ function StatusBadge({ status }) {
 function FieldInput({ label, required, children }) {
   return (
     <div>
-      <label className="block text-xs font-medium text-gray-600 mb-1.5">
+      <label className="block text-xs font-medium text-slate-400 mb-1.5">
         {label}{required && <span className="text-red-400 ml-0.5">*</span>}
       </label>
       {children}
@@ -183,13 +183,13 @@ export default function Fulfillment() {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Fulfillment & Delivery</h1>
-          <p className="text-sm text-gray-400 mt-1">
+          <h1 className="text-2xl font-bold text-slate-100">Fulfillment & Delivery</h1>
+          <p className="text-sm text-slate-400 mt-1">
             Review orders from sales and confirm stock availability.
           </p>
         </div>
         <button onClick={refreshEntries}
-          className="flex items-center gap-2 px-3 py-2 text-sm text-gray-500 border border-gray-200 bg-white rounded-lg hover:bg-gray-50 transition-colors">
+          className="flex items-center gap-2 px-3 py-2 text-sm text-slate-400 border border-slate-600 bg-slate-800 rounded-lg hover:bg-slate-700 transition-colors">
           <RefreshCw size={13} />
           Refresh
         </button>
@@ -197,43 +197,43 @@ export default function Fulfillment() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white border border-gray-200 rounded-xl p-5">
+        <div className="bg-slate-800 border border-slate-700 rounded-xl p-5">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest">Pending</span>
-            <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
-              <Clock size={15} className="text-amber-500" />
+            <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest">Pending</span>
+            <div className="w-8 h-8 rounded-lg bg-amber-900/30 flex items-center justify-center">
+              <Clock size={15} className="text-amber-400" />
             </div>
           </div>
-          <p className="text-3xl font-bold text-gray-900">{pending.length}</p>
-          <p className="text-xs text-gray-400 mt-1.5">{fmt(pendingValue)} awaiting review</p>
+          <p className="text-3xl font-bold text-slate-100">{pending.length}</p>
+          <p className="text-xs text-slate-400 mt-1.5">{fmt(pendingValue)} awaiting review</p>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-xl p-5">
+        <div className="bg-slate-800 border border-slate-700 rounded-xl p-5">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest">Ready to Ship</span>
-            <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center">
-              <Truck size={15} className="text-emerald-500" />
+            <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest">Ready to Ship</span>
+            <div className="w-8 h-8 rounded-lg bg-emerald-900/30 flex items-center justify-center">
+              <Truck size={15} className="text-emerald-400" />
             </div>
           </div>
-          <p className="text-3xl font-bold text-emerald-600">{available.length}</p>
-          <p className="text-xs text-gray-400 mt-1.5">{fmt(availableValue)} confirmed</p>
+          <p className="text-3xl font-bold text-emerald-400">{available.length}</p>
+          <p className="text-xs text-slate-400 mt-1.5">{fmt(availableValue)} confirmed</p>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-xl p-5">
+        <div className="bg-slate-800 border border-slate-700 rounded-xl p-5">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest">Not Available</span>
-            <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center">
-              <X size={15} className="text-red-500" />
+            <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest">Not Available</span>
+            <div className="w-8 h-8 rounded-lg bg-red-900/30 flex items-center justify-center">
+              <X size={15} className="text-red-400" />
             </div>
           </div>
-          <p className="text-3xl font-bold text-red-600">{unavail.length}</p>
-          <p className="text-xs text-gray-400 mt-1.5">{fmt(unavailValue)} back-ordered</p>
+          <p className="text-3xl font-bold text-red-400">{unavail.length}</p>
+          <p className="text-xs text-slate-400 mt-1.5">{fmt(unavailValue)} back-ordered</p>
         </div>
       </div>
 
       {/* Tabs + Search */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl">
+        <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-700">
           {[
             { key: "pending",   label: "Pending",       count: pending.length,   color: "amber"   },
             { key: "available", label: "Available",      count: available.length, color: "emerald" },
@@ -241,15 +241,15 @@ export default function Fulfillment() {
           ].map(({ key, label, count, color }) => (
             <button key={key} onClick={() => setTab(key)}
               className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all ${
-                tab === key ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"
+                tab === key ? "bg-slate-700 text-slate-100 shadow-sm" : "text-slate-500 hover:text-slate-300"
               }`}>
               {label}
               <span className={`min-w-[20px] h-5 flex items-center justify-center px-1.5 rounded-full text-[11px] font-bold transition-colors ${
                 tab === key
-                  ? color === "amber"   ? "bg-amber-100 text-amber-700"
-                  : color === "emerald" ? "bg-emerald-100 text-emerald-700"
-                  :                       "bg-red-100 text-red-700"
-                  : "bg-gray-200 text-gray-500"
+                  ? color === "amber"   ? "bg-amber-900/50 text-amber-300"
+                  : color === "emerald" ? "bg-emerald-900/50 text-emerald-300"
+                  :                       "bg-red-900/50 text-red-300"
+                  : "bg-slate-700 text-slate-500"
               }`}>
                 {count}
               </span>
@@ -258,13 +258,13 @@ export default function Fulfillment() {
         </div>
 
         <div className="relative">
-          <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+          <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
           <input
             type="text"
             placeholder="Search company or invoice…"
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full sm:w-64 pl-8 pr-4 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-400 placeholder:text-gray-400"
+            className="w-full sm:w-64 pl-8 pr-4 py-2 text-sm border border-slate-600 rounded-lg bg-slate-900 text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 placeholder:text-slate-500"
           />
         </div>
       </div>
@@ -279,8 +279,8 @@ export default function Fulfillment() {
           const isUnavail   = order.fulfillment === "unavailable";
 
           return (
-            <div key={orderKey} className={`bg-white rounded-xl border overflow-hidden transition-shadow hover:shadow-sm ${
-              isAvailable ? "border-emerald-200" : isUnavail ? "border-red-200" : "border-gray-200"
+            <div key={orderKey} className={`bg-slate-800 rounded-xl border overflow-hidden transition-shadow hover:shadow-md ${
+              isAvailable ? "border-emerald-700" : isUnavail ? "border-red-700" : "border-slate-700"
             }`}>
               {/* Color stripe */}
               <div className={`h-1 ${isAvailable ? "bg-emerald-400" : isUnavail ? "bg-red-400" : "bg-amber-400"}`} />
@@ -290,56 +290,56 @@ export default function Fulfillment() {
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3 flex-wrap">
-                      <h3 className="text-base font-bold text-gray-900">{order.company}</h3>
+                      <h3 className="text-base font-bold text-slate-100">{order.company}</h3>
                       <StatusBadge status={order.fulfillment} />
                       {order.invoice && (
-                        <span className="font-mono text-xs font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">
+                        <span className="font-mono text-xs font-semibold text-indigo-400 bg-indigo-900/30 px-2 py-0.5 rounded-md border border-indigo-700/50">
                           {order.invoice}
                         </span>
                       )}
                       {order.orderNo && (
-                        <span className="font-mono text-[10px] text-gray-400 bg-gray-50 px-1.5 py-0.5 rounded">
+                        <span className="font-mono text-[10px] text-slate-500 bg-slate-700/30 px-1.5 py-0.5 rounded">
                           {order.orderNo}
                         </span>
                       )}
                     </div>
                     {order.customer && (
-                      <p className="text-sm text-gray-500 mt-0.5">{order.customer}</p>
+                      <p className="text-sm text-slate-400 mt-0.5">{order.customer}</p>
                     )}
                   </div>
 
                   <div className="flex items-center gap-2 shrink-0">
                     <div className="text-right">
-                      <p className="text-lg font-bold text-gray-900">{fmt(order.total)}</p>
+                      <p className="text-lg font-bold text-slate-100">{fmt(order.total)}</p>
                       {order.paymentTerms && (
-                        <p className="text-xs text-gray-400">{order.paymentTerms}</p>
+                        <p className="text-xs text-slate-400">{order.paymentTerms}</p>
                       )}
                     </div>
                     <button onClick={() => setExpanded(isExpanded ? null : orderKey)}
-                      className="p-2 text-gray-300 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors">
+                      className="p-2 text-slate-600 hover:text-slate-300 rounded-lg hover:bg-slate-700 transition-colors">
                       {isExpanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
                     </button>
                   </div>
                 </div>
 
                 {/* Products table */}
-                <div className="mt-4 rounded-lg border border-gray-100 overflow-x-auto">
+                <div className="mt-4 rounded-lg border border-slate-700 overflow-x-auto">
                   <table className="w-full text-xs">
                     <thead>
-                      <tr className="bg-gray-50 border-b border-gray-100">
-                        <th className="text-left px-3 py-2 font-semibold text-gray-400 uppercase tracking-wide text-[10px]">Product</th>
-                        <th className="text-left px-3 py-2 font-semibold text-gray-400 uppercase tracking-wide text-[10px]">SKU</th>
-                        <th className="text-right px-3 py-2 font-semibold text-gray-400 uppercase tracking-wide text-[10px]">Qty</th>
-                        <th className="text-right px-3 py-2 font-semibold text-gray-400 uppercase tracking-wide text-[10px]">Amount</th>
+                      <tr className="bg-slate-900 border-b border-slate-700">
+                        <th className="text-left px-3 py-2 font-semibold text-slate-400 uppercase tracking-wide text-[10px]">Product</th>
+                        <th className="text-left px-3 py-2 font-semibold text-slate-400 uppercase tracking-wide text-[10px]">SKU</th>
+                        <th className="text-right px-3 py-2 font-semibold text-slate-400 uppercase tracking-wide text-[10px]">Qty</th>
+                        <th className="text-right px-3 py-2 font-semibold text-slate-400 uppercase tracking-wide text-[10px]">Amount</th>
                       </tr>
                     </thead>
                     <tbody>
                       {order.items.map((item, i) => (
-                        <tr key={i} className={i < order.items.length - 1 ? "border-b border-gray-50" : ""}>
-                          <td className="px-3 py-2.5 font-medium text-gray-800">{item.product || "—"}</td>
-                          <td className="px-3 py-2.5 font-mono text-gray-400">{item.sku || "—"}</td>
-                          <td className="px-3 py-2.5 text-right text-gray-600">{item.qty}</td>
-                          <td className="px-3 py-2.5 text-right font-semibold text-gray-800">{fmt(item.total)}</td>
+                        <tr key={i} className={i < order.items.length - 1 ? "border-b border-slate-700/50" : ""}>
+                          <td className="px-3 py-2.5 font-medium text-slate-200">{item.product || "—"}</td>
+                          <td className="px-3 py-2.5 font-mono text-slate-500">{item.sku || "—"}</td>
+                          <td className="px-3 py-2.5 text-right text-slate-400">{item.qty}</td>
+                          <td className="px-3 py-2.5 text-right font-semibold text-slate-200">{fmt(item.total)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -352,13 +352,13 @@ export default function Fulfillment() {
                   {/* Pending — choose action */}
                   {!order.fulfillment && !isActioning && (
                     <div className="flex items-center gap-3 flex-wrap">
-                      <p className="text-sm text-gray-500 font-medium">Is this order ready to ship?</p>
+                      <p className="text-sm text-slate-400 font-medium">Is this order ready to ship?</p>
                       <button onClick={() => startAction(orderKey, "available")}
                         className="flex items-center gap-2 px-5 py-2 text-sm font-semibold text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 active:bg-emerald-800 transition-colors">
                         <Check size={14} /> Yes, available
                       </button>
                       <button onClick={() => startAction(orderKey, "unavailable")}
-                        className="flex items-center gap-2 px-5 py-2 text-sm font-semibold text-red-700 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors">
+                        className="flex items-center gap-2 px-5 py-2 text-sm font-semibold text-red-400 bg-red-900/30 border border-red-700 rounded-lg hover:bg-red-900/50 transition-colors">
                         <X size={14} /> Not available
                       </button>
                     </div>
@@ -366,13 +366,13 @@ export default function Fulfillment() {
 
                   {/* Available form */}
                   {isActioning && actionType === "available" && (
-                    <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-5 mt-1">
-                      <p className="text-sm font-semibold text-emerald-800 mb-4">Confirm availability — fill shipment details</p>
+                    <div className="bg-emerald-900/30 border border-emerald-700 rounded-xl p-5 mt-1">
+                      <p className="text-sm font-semibold text-emerald-300 mb-4">Confirm availability — fill shipment details</p>
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
                         <FieldInput label="Fulfilled month" required>
                           <select value={formData.fulfilledMonth}
                             onChange={e => setFormData(f => ({ ...f, fulfilledMonth: e.target.value }))}
-                            className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-400 appearance-none">
+                            className="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 appearance-none">
                             <option value="">Select…</option>
                             {MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
                           </select>
@@ -380,24 +380,24 @@ export default function Fulfillment() {
                         <FieldInput label="Shipment date" required>
                           <input type="date" value={formData.shipmentDate}
                             onChange={e => setFormData(f => ({ ...f, shipmentDate: e.target.value }))}
-                            className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-400" />
+                            className="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" />
                         </FieldInput>
                         <FieldInput label="Delivery method">
                           <select value={formData.delivery}
                             onChange={e => setFormData(f => ({ ...f, delivery: e.target.value }))}
-                            className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-400 appearance-none">
+                            className="w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 appearance-none">
                             {DELIVERY.map(d => <option key={d}>{d}</option>)}
                           </select>
                         </FieldInput>
                       </div>
-                      {saveError && <p className="text-xs text-red-600 mb-3">{saveError}</p>}
+                      {saveError && <p className="text-xs text-red-400 mb-3">{saveError}</p>}
                       <div className="flex items-center gap-2">
                         <button onClick={() => saveAvailable(orderKey)} disabled={saving}
                           className="flex items-center gap-2 px-5 py-2 text-sm font-semibold text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 disabled:opacity-50 transition-colors">
                           <CheckCircle2 size={14} /> {saving ? "Saving…" : "Confirm & Save"}
                         </button>
                         <button onClick={cancelAction}
-                          className="px-4 py-2 text-sm text-gray-500 border border-gray-200 bg-white rounded-lg hover:bg-gray-50 transition-colors">
+                          className="px-4 py-2 text-sm text-slate-400 border border-slate-600 bg-slate-800 rounded-lg hover:bg-slate-700 transition-colors">
                           Cancel
                         </button>
                       </div>
@@ -406,39 +406,39 @@ export default function Fulfillment() {
 
                   {/* Unavailable form */}
                   {isActioning && actionType === "unavailable" && (
-                    <div className="bg-red-50 border border-red-200 rounded-xl p-5 mt-1">
-                      <p className="text-sm font-semibold text-red-800 mb-4">Mark as unavailable — when will it be ready?</p>
+                    <div className="bg-red-900/30 border border-red-700 rounded-xl p-5 mt-1">
+                      <p className="text-sm font-semibold text-red-300 mb-4">Mark as unavailable — when will it be ready?</p>
                       <div className="flex items-end gap-4 flex-wrap">
                         <FieldInput label="Estimated ready date" required>
                           <input type="date" value={formData.readyDate}
                             onChange={e => setFormData(f => ({ ...f, readyDate: e.target.value }))}
-                            className="px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-red-300" />
+                            className="px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500" />
                         </FieldInput>
                         <div className="flex items-center gap-2 pb-0.5">
                           <button onClick={() => saveUnavailable(orderKey)} disabled={saving || !formData.readyDate}
-                            className="flex items-center gap-2 px-5 py-2 text-sm font-semibold text-white bg-gray-900 rounded-lg hover:bg-gray-700 disabled:opacity-40 transition-colors">
+                            className="flex items-center gap-2 px-5 py-2 text-sm font-semibold text-white bg-slate-600 rounded-lg hover:bg-slate-500 disabled:opacity-40 transition-colors">
                             {saving ? "Saving…" : "Confirm"}
                           </button>
                           <button onClick={cancelAction}
-                            className="px-4 py-2 text-sm text-gray-500 border border-gray-200 bg-white rounded-lg hover:bg-gray-50 transition-colors">
+                            className="px-4 py-2 text-sm text-slate-400 border border-slate-600 bg-slate-800 rounded-lg hover:bg-slate-700 transition-colors">
                             Cancel
                           </button>
                         </div>
                       </div>
-                      {saveError && <p className="text-xs text-red-600 mt-2">{saveError}</p>}
+                      {saveError && <p className="text-xs text-red-400 mt-2">{saveError}</p>}
                     </div>
                   )}
 
                   {/* Available summary */}
                   {isAvailable && !isActioning && (
-                    <div className="flex items-center justify-between bg-emerald-50 border border-emerald-100 rounded-xl px-4 py-3">
+                    <div className="flex items-center justify-between bg-emerald-900/30 border border-emerald-700 rounded-xl px-4 py-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-lg bg-emerald-100 flex items-center justify-center shrink-0">
-                          <Truck size={16} className="text-emerald-600" />
+                        <div className="w-9 h-9 rounded-lg bg-emerald-900/50 flex items-center justify-center shrink-0">
+                          <Truck size={16} className="text-emerald-400" />
                         </div>
                         <div>
-                          <p className="text-sm font-semibold text-emerald-800">Ready to ship</p>
-                          <div className="flex items-center gap-3 mt-0.5 text-xs text-emerald-700 flex-wrap">
+                          <p className="text-sm font-semibold text-emerald-300">Ready to ship</p>
+                          <div className="flex items-center gap-3 mt-0.5 text-xs text-emerald-400 flex-wrap">
                             {order.fulfilledMonth && (
                               <span className="flex items-center gap-1">
                                 <Calendar size={10} /> {order.fulfilledMonth}
@@ -450,7 +450,7 @@ export default function Fulfillment() {
                         </div>
                       </div>
                       <button onClick={() => resetFulfillment(orderKey)}
-                        className="text-xs text-gray-400 hover:text-gray-600 underline underline-offset-2 transition-colors">
+                        className="text-xs text-slate-500 hover:text-slate-300 underline underline-offset-2 transition-colors">
                         Undo
                       </button>
                     </div>
@@ -458,24 +458,24 @@ export default function Fulfillment() {
 
                   {/* Unavailable summary */}
                   {isUnavail && !isActioning && (
-                    <div className="flex items-center justify-between bg-red-50 border border-red-100 rounded-xl px-4 py-3">
+                    <div className="flex items-center justify-between bg-red-900/30 border border-red-700 rounded-xl px-4 py-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-lg bg-red-100 flex items-center justify-center shrink-0">
-                          <Clock size={16} className="text-red-600" />
+                        <div className="w-9 h-9 rounded-lg bg-red-900/50 flex items-center justify-center shrink-0">
+                          <Clock size={16} className="text-red-400" />
                         </div>
                         <div>
-                          <p className="text-sm font-semibold text-red-800">Not available</p>
+                          <p className="text-sm font-semibold text-red-300">Not available</p>
                           {order.fulfillmentReadyDate ? (
-                            <p className="text-xs text-red-600 mt-0.5">
+                            <p className="text-xs text-red-400 mt-0.5">
                               Estimated ready: {fmtDate(order.fulfillmentReadyDate)}
                             </p>
                           ) : (
-                            <p className="text-xs text-red-400 mt-0.5">No ETA set</p>
+                            <p className="text-xs text-red-500 mt-0.5">No ETA set</p>
                           )}
                         </div>
                       </div>
                       <button onClick={() => resetFulfillment(orderKey)}
-                        className="text-xs text-gray-400 hover:text-gray-600 underline underline-offset-2 transition-colors">
+                        className="text-xs text-slate-500 hover:text-slate-300 underline underline-offset-2 transition-colors">
                         Undo
                       </button>
                     </div>
@@ -486,7 +486,7 @@ export default function Fulfillment() {
 
               {/* Expanded detail */}
               {isExpanded && (
-                <div className="border-t border-gray-100 bg-gray-50/60 px-6 py-5">
+                <div className="border-t border-slate-700 bg-slate-900/50 px-6 py-5">
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-8 gap-y-4">
                     {[
                       ["Invoice #",       order.invoice],
@@ -497,8 +497,8 @@ export default function Fulfillment() {
                       ["Payment status",  order.status],
                     ].filter(([, v]) => v).map(([label, value]) => (
                       <div key={label}>
-                        <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-0.5">{label}</p>
-                        <p className="text-sm font-medium text-gray-800">{value}</p>
+                        <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 mb-0.5">{label}</p>
+                        <p className="text-sm font-medium text-slate-200">{value}</p>
                       </div>
                     ))}
                   </div>
@@ -509,16 +509,16 @@ export default function Fulfillment() {
         })}
 
         {list.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-20 border border-dashed border-gray-200 rounded-xl bg-gray-50/40">
-            <div className="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center mb-4">
-              <Package size={24} className="text-gray-300" />
+          <div className="flex flex-col items-center justify-center py-20 border border-dashed border-slate-700 rounded-xl bg-slate-900/40">
+            <div className="w-14 h-14 rounded-2xl bg-slate-800 flex items-center justify-center mb-4">
+              <Package size={24} className="text-slate-600" />
             </div>
-            <p className="text-sm font-semibold text-gray-500">
+            <p className="text-sm font-semibold text-slate-400">
               {tab === "pending"   ? "All caught up — no pending orders" :
                tab === "available" ? "No orders marked available yet" :
                                      "No unavailable orders"}
             </p>
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="text-xs text-slate-500 mt-1">
               {tab === "pending"   ? "New orders from sales will appear here." :
                tab === "available" ? "Confirmed available orders will show here." :
                                      "Back-ordered items will appear here."}

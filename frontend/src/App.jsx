@@ -43,12 +43,12 @@ export default function App() {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-slate-950">
 
       {/* Mobile backdrop */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/30 z-20 md:hidden"
+          className="fixed inset-0 bg-black/50 z-20 md:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
@@ -57,7 +57,7 @@ export default function App() {
           Mobile:  fixed overlay (slides in/out via width)
           Desktop: sticky inline (affects layout flow via width) */}
       <aside
-        className="fixed md:sticky top-0 left-0 z-30 h-screen flex flex-col bg-white border-r border-gray-200 overflow-hidden transition-all duration-250 ease-in-out md:shrink-0"
+        className="fixed md:sticky top-0 left-0 z-30 h-screen flex flex-col bg-slate-900 border-r border-slate-800 overflow-hidden transition-all duration-250 ease-in-out md:shrink-0"
         style={{ width: sidebarOpen ? "216px" : "0px" }}
       >
         <div className="w-[216px] flex flex-col flex-1">
@@ -68,13 +68,13 @@ export default function App() {
                 <Building2 size={13} className="text-white" />
               </div>
               <div>
-                <p className="text-[13px] font-semibold text-gray-900 leading-tight whitespace-nowrap">Nysonian Inc.</p>
-                <p className="text-[10px] text-gray-400 whitespace-nowrap">Finance</p>
+                <p className="text-[13px] font-semibold text-slate-100 leading-tight whitespace-nowrap">Nysonian Inc.</p>
+                <p className="text-[10px] text-slate-400 whitespace-nowrap">Finance</p>
               </div>
             </div>
             <button
               onClick={() => setSidebarOpen(false)}
-              className="p-1 rounded-md text-gray-300 hover:text-gray-500 hover:bg-gray-100 transition-colors"
+              className="p-1 rounded-md text-slate-500 hover:text-slate-300 hover:bg-slate-700 transition-colors"
             >
               <PanelLeftClose size={14} />
             </button>
@@ -88,20 +88,20 @@ export default function App() {
               const isAdd = tab.id === "add";
               return (
                 <div key={tab.id}>
-                  {isAdd && <div className="border-t border-gray-100 my-2" />}
+                  {isAdd && <div className="border-t border-slate-800 my-2" />}
                   <button
                     onClick={() => switchTab(tab.id)}
                     className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-[13px] font-medium transition-colors whitespace-nowrap ${
                       isActive
                         ? isAdd
                           ? "bg-indigo-600 text-white"
-                          : "bg-indigo-50 text-indigo-700"
+                          : "bg-indigo-900/50 text-indigo-300"
                         : isAdd
-                          ? "text-indigo-600 hover:bg-indigo-50 border border-dashed border-indigo-200"
-                          : "text-gray-500 hover:text-gray-800 hover:bg-gray-50"
+                          ? "text-indigo-400 hover:bg-indigo-900/30 border border-dashed border-indigo-700"
+                          : "text-slate-400 hover:text-slate-100 hover:bg-slate-700"
                     }`}
                   >
-                    <Icon size={14} className={isActive ? (isAdd ? "text-white" : "text-indigo-500") : isAdd ? "text-indigo-500" : "text-gray-400"} />
+                    <Icon size={14} className={isActive ? (isAdd ? "text-white" : "text-indigo-400") : isAdd ? "text-indigo-400" : "text-slate-500"} />
                     <span className="flex-1 text-left">{tab.label}</span>
                     {isActive && !isAdd && <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 shrink-0" />}
                   </button>
@@ -111,7 +111,7 @@ export default function App() {
           </nav>
 
           <div className="px-4 py-4 mt-auto">
-            <p className="text-[11px] text-gray-300">Data as of Jul 2025</p>
+            <p className="text-[11px] text-slate-500">Data as of Jul 2025</p>
           </div>
         </div>
       </aside>
@@ -119,25 +119,25 @@ export default function App() {
       {/* Main */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
-        <header className="h-12 flex items-center px-4 border-b border-gray-200 bg-white gap-3 shrink-0">
+        <header className="h-12 flex items-center px-4 border-b border-slate-800 bg-slate-900 gap-3 shrink-0">
           {/* Menu button — always visible on mobile, visible on desktop when sidebar closed */}
           {(!sidebarOpen) && (
             <button
               onClick={() => setSidebarOpen(true)}
-              className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors shrink-0"
+              className="p-1.5 rounded-md text-slate-500 hover:text-slate-300 hover:bg-slate-700 transition-colors shrink-0"
             >
               <Menu size={15} />
             </button>
           )}
           <div className="flex items-center gap-1.5 text-[13px] min-w-0">
-            <span className="text-gray-400 shrink-0 hidden sm:block">Nysonian Inc.</span>
-            <ChevronRight size={12} className="text-gray-300 shrink-0 hidden sm:block" />
-            <span className="text-gray-800 font-medium truncate">{active?.label}</span>
+            <span className="text-slate-500 shrink-0 hidden sm:block">Nysonian Inc.</span>
+            <ChevronRight size={12} className="text-slate-600 shrink-0 hidden sm:block" />
+            <span className="text-slate-100 font-medium truncate">{active?.label}</span>
           </div>
         </header>
 
         {loading && (
-          <div className="h-0.5 w-full bg-gray-100 overflow-hidden shrink-0">
+          <div className="h-0.5 w-full bg-slate-800 overflow-hidden shrink-0">
             <div className="h-full bg-indigo-400 animate-pulse w-full" />
           </div>
         )}

@@ -9,7 +9,7 @@ import StatusBadge from "./StatusBadge";
 
 const fmt = (n) =>
   n === 0
-    ? <span className="text-gray-300 text-xs">Gift</span>
+    ? <span className="text-slate-600 text-xs">Gift</span>
     : new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n);
 
 const fmtNum = (n) =>
@@ -25,9 +25,9 @@ function CompanyDuesAlert({ company, transactions, excludeId }) {
 
   const total = dues.reduce((s, t) => s + (t.total || 0), 0);
   return (
-    <div className="flex items-start gap-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg">
-      <AlertTriangle size={13} className="text-amber-500 mt-0.5 shrink-0" />
-      <p className="text-xs text-amber-700">
+    <div className="flex items-start gap-2 px-3 py-2 bg-amber-900/30 border border-amber-700 rounded-lg">
+      <AlertTriangle size={13} className="text-amber-400 mt-0.5 shrink-0" />
+      <p className="text-xs text-amber-300">
         <span className="font-semibold">{company}</span> has {dues.length} other outstanding
         invoice{dues.length !== 1 ? "s" : ""} totalling{" "}
         <span className="font-semibold">{fmtNum(total)}</span> — review before approving.
@@ -38,7 +38,7 @@ function CompanyDuesAlert({ company, transactions, excludeId }) {
 
 function HistorySection({ company, transactions, excludeIds }) {
   const all = transactions.filter(t => t.company === company && !excludeIds.has(t.id));
-  if (!all.length) return <p className="text-xs text-gray-300 px-4 pb-4">No prior history.</p>;
+  if (!all.length) return <p className="text-xs text-slate-600 px-4 pb-4">No prior history.</p>;
 
   const pending = all.filter(t => RISK.has(t.status));
   const done    = all.filter(t => !RISK.has(t.status));
@@ -47,16 +47,16 @@ function HistorySection({ company, transactions, excludeIds }) {
     <div className="space-y-3 px-4 pb-4">
       {pending.length > 0 && (
         <div>
-          <p className="text-[11px] font-semibold text-red-500 uppercase tracking-wider mb-1.5">Pending / outstanding</p>
-          <div className="divide-y divide-gray-50 border border-red-100 rounded-lg overflow-hidden">
+          <p className="text-[11px] font-semibold text-red-400 uppercase tracking-wider mb-1.5">Pending / outstanding</p>
+          <div className="divide-y divide-slate-700 border border-red-800 rounded-lg overflow-hidden">
             {pending.map(t => (
-              <div key={t.id} className="flex items-center gap-3 px-3 py-2 bg-red-50/40">
+              <div key={t.id} className="flex items-center gap-3 px-3 py-2 bg-red-900/30">
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-gray-800 truncate">{t.product || "—"}</p>
-                  <p className="text-[11px] text-gray-400">{t.invoice ? `INV ${t.invoice}` : "No invoice"} · Due {t.dueDate || "—"}</p>
+                  <p className="text-xs font-medium text-slate-200 truncate">{t.product || "—"}</p>
+                  <p className="text-[11px] text-slate-400">{t.invoice ? `INV ${t.invoice}` : "No invoice"} · Due {t.dueDate || "—"}</p>
                 </div>
                 <StatusBadge status={t.status} />
-                <span className="text-xs font-semibold text-red-700 whitespace-nowrap">{fmtNum(t.total)}</span>
+                <span className="text-xs font-semibold text-red-400 whitespace-nowrap">{fmtNum(t.total)}</span>
               </div>
             ))}
           </div>
@@ -65,16 +65,16 @@ function HistorySection({ company, transactions, excludeIds }) {
 
       {done.length > 0 && (
         <div>
-          <p className="text-[11px] font-semibold text-emerald-600 uppercase tracking-wider mb-1.5">Cleared</p>
-          <div className="divide-y divide-gray-50 border border-gray-100 rounded-lg overflow-hidden">
+          <p className="text-[11px] font-semibold text-emerald-400 uppercase tracking-wider mb-1.5">Cleared</p>
+          <div className="divide-y divide-slate-700 border border-slate-700 rounded-lg overflow-hidden">
             {done.map(t => (
-              <div key={t.id} className="flex items-center gap-3 px-3 py-2 bg-white">
+              <div key={t.id} className="flex items-center gap-3 px-3 py-2 bg-slate-800">
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-gray-700 truncate">{t.product || "—"}</p>
-                  <p className="text-[11px] text-gray-400">{t.invoice ? `INV ${t.invoice}` : "No invoice"} · {t.paymentRecDate || t.invoiceDate}</p>
+                  <p className="text-xs font-medium text-slate-300 truncate">{t.product || "—"}</p>
+                  <p className="text-[11px] text-slate-400">{t.invoice ? `INV ${t.invoice}` : "No invoice"} · {t.paymentRecDate || t.invoiceDate}</p>
                 </div>
                 <StatusBadge status={t.status} />
-                <span className="text-xs font-semibold text-gray-600 whitespace-nowrap">{fmtNum(t.total)}</span>
+                <span className="text-xs font-semibold text-slate-300 whitespace-nowrap">{fmtNum(t.total)}</span>
               </div>
             ))}
           </div>
@@ -88,40 +88,40 @@ function ApprovalCard({ tx, transactions, onApprove, onHold, isHeld }) {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className={`bg-white border rounded-xl overflow-hidden transition-all ${isHeld ? "border-gray-200 opacity-60" : "border-amber-200 shadow-sm"}`}>
+    <div className={`bg-slate-800 border rounded-xl overflow-hidden transition-all ${isHeld ? "border-slate-600 opacity-60" : "border-amber-700 shadow-sm"}`}>
       {/* Card header */}
       <div className="px-5 py-4">
         <div className="flex items-start gap-4">
           {/* Icon */}
-          <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${isHeld ? "bg-gray-100" : "bg-amber-50 border border-amber-100"}`}>
+          <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${isHeld ? "bg-slate-700" : "bg-amber-900/30 border border-amber-700"}`}>
             {isHeld
-              ? <ShieldX size={18} className="text-gray-400" />
-              : <Clock size={18} className="text-amber-500" />
+              ? <ShieldX size={18} className="text-slate-500" />
+              : <Clock size={18} className="text-amber-400" />
             }
           </div>
 
           {/* Info */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <p className="text-[13px] font-semibold text-gray-900">{tx.company}</p>
+              <p className="text-[13px] font-semibold text-slate-100">{tx.company}</p>
               {isHeld && (
-                <span className="px-2 py-0.5 bg-gray-100 text-gray-500 text-[11px] font-semibold rounded-full">HELD</span>
+                <span className="px-2 py-0.5 bg-slate-700 text-slate-400 text-[11px] font-semibold rounded-full">HELD</span>
               )}
               {!isHeld && (
-                <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-[11px] font-semibold rounded-full">NEEDS APPROVAL</span>
+                <span className="px-2 py-0.5 bg-amber-900/40 text-amber-300 text-[11px] font-semibold rounded-full border border-amber-700">NEEDS APPROVAL</span>
               )}
             </div>
             <div className="flex items-center gap-3 mt-1 flex-wrap">
-              <span className="flex items-center gap-1 text-xs text-gray-400">
+              <span className="flex items-center gap-1 text-xs text-slate-400">
                 <User size={10} /> {tx.customer}
               </span>
               {tx.invoice && (
-                <span className="flex items-center gap-1 text-xs font-mono text-indigo-600 font-semibold">
+                <span className="flex items-center gap-1 text-xs font-mono text-indigo-400 font-semibold">
                   <FileText size={10} /> INV {tx.invoice}
                 </span>
               )}
               {tx.invoiceDate && (
-                <span className="flex items-center gap-1 text-xs text-gray-400">
+                <span className="flex items-center gap-1 text-xs text-slate-400">
                   <Calendar size={10} /> {tx.invoiceDate}
                 </span>
               )}
@@ -130,24 +130,24 @@ function ApprovalCard({ tx, transactions, onApprove, onHold, isHeld }) {
 
           {/* Amount + status */}
           <div className="text-right shrink-0">
-            <p className="text-lg font-bold text-gray-900">{fmtNum(tx.total)}</p>
+            <p className="text-lg font-bold text-slate-100">{fmtNum(tx.total)}</p>
             <StatusBadge status={tx.status} />
           </div>
         </div>
 
         {/* Product & terms */}
         <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-          <div className="bg-gray-50 rounded-lg px-3 py-2">
-            <p className="text-gray-400 mb-0.5">Product</p>
-            <p className="font-medium text-gray-700 truncate">{tx.product || "—"}</p>
+          <div className="bg-slate-900/50 rounded-lg px-3 py-2">
+            <p className="text-slate-400 mb-0.5">Product</p>
+            <p className="font-medium text-slate-200 truncate">{tx.product || "—"}</p>
           </div>
-          <div className="bg-gray-50 rounded-lg px-3 py-2">
-            <p className="text-gray-400 mb-0.5">Qty × Price</p>
-            <p className="font-medium text-gray-700">{tx.qty} × {tx.unitPrice > 0 ? fmtNum(tx.unitPrice) : "Gift"}</p>
+          <div className="bg-slate-900/50 rounded-lg px-3 py-2">
+            <p className="text-slate-400 mb-0.5">Qty × Price</p>
+            <p className="font-medium text-slate-200">{tx.qty} × {tx.unitPrice > 0 ? fmtNum(tx.unitPrice) : "Gift"}</p>
           </div>
-          <div className="bg-gray-50 rounded-lg px-3 py-2">
-            <p className="text-gray-400 mb-0.5">Terms / Due</p>
-            <p className="font-medium text-gray-700">{tx.paymentTerms || "—"}{tx.dueDate ? ` · ${tx.dueDate}` : ""}</p>
+          <div className="bg-slate-900/50 rounded-lg px-3 py-2">
+            <p className="text-slate-400 mb-0.5">Terms / Due</p>
+            <p className="font-medium text-slate-200">{tx.paymentTerms || "—"}{tx.dueDate ? ` · ${tx.dueDate}` : ""}</p>
           </div>
         </div>
 
@@ -161,14 +161,14 @@ function ApprovalCard({ tx, transactions, onApprove, onHold, isHeld }) {
         {/* Actions row */}
         <div className="mt-4 flex flex-wrap items-center gap-2">
           <button onClick={() => setOpen(o => !o)}
-            className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors">
+            className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-200 border border-slate-600 px-3 py-1.5 rounded-lg hover:bg-slate-700 transition-colors">
             {open ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
             {open ? "Hide" : "View"} company history
           </button>
           {!isHeld && (
             <div className="sm:ml-auto flex items-center gap-2">
               <button onClick={() => onHold(tx.id)}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-red-600 border border-red-200 bg-red-50 rounded-lg hover:bg-red-100 transition-colors">
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-red-400 border border-red-800 bg-red-900/30 rounded-lg hover:bg-red-900/50 transition-colors">
                 <X size={12} /> Hold
               </button>
               <button onClick={() => onApprove(tx.id)}
@@ -182,8 +182,8 @@ function ApprovalCard({ tx, transactions, onApprove, onHold, isHeld }) {
 
       {/* Expanded history */}
       {open && (
-        <div className="border-t border-gray-100 bg-gray-50/50 pt-3">
-          <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider px-4 mb-2">
+        <div className="border-t border-slate-700 bg-slate-900/50 pt-3">
+          <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider px-4 mb-2">
             All transactions — {tx.company}
           </p>
           <HistorySection
@@ -202,35 +202,35 @@ function ApprovedCard({ tx }) {
   const { transactions } = useData();
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+    <div className="bg-slate-800 border border-slate-700 rounded-xl overflow-hidden">
       <div className="px-5 py-3 flex items-start gap-3">
-        <div className="w-8 h-8 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center shrink-0 mt-0.5">
-          <CheckCircle2 size={15} className="text-emerald-500" />
+        <div className="w-8 h-8 rounded-full bg-emerald-900/30 border border-emerald-700 flex items-center justify-center shrink-0 mt-0.5">
+          <CheckCircle2 size={15} className="text-emerald-400" />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <p className="text-[13px] font-semibold text-gray-900">{tx.company}</p>
-            <span className="text-xs text-gray-400 hidden sm:inline">{tx.customer}</span>
-            {tx.invoice && <span className="font-mono text-xs text-indigo-500 font-semibold">INV {tx.invoice}</span>}
+            <p className="text-[13px] font-semibold text-slate-100">{tx.company}</p>
+            <span className="text-xs text-slate-400 hidden sm:inline">{tx.customer}</span>
+            {tx.invoice && <span className="font-mono text-xs text-indigo-400 font-semibold">INV {tx.invoice}</span>}
           </div>
-          <p className="text-xs text-gray-400 mt-0.5 truncate">{tx.product}{tx.invoiceDate ? ` · ${tx.invoiceDate}` : ""}</p>
+          <p className="text-xs text-slate-400 mt-0.5 truncate">{tx.product}{tx.invoiceDate ? ` · ${tx.invoiceDate}` : ""}</p>
           <div className="flex items-center gap-2 mt-1.5 flex-wrap">
             <StatusBadge status={tx.status} />
-            <span className="text-sm font-bold text-gray-700">{fmtNum(tx.total)}</span>
-            <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 text-[11px] font-bold rounded-full border border-emerald-100">
+            <span className="text-sm font-bold text-slate-300">{fmtNum(tx.total)}</span>
+            <span className="px-2 py-0.5 bg-emerald-900/40 text-emerald-300 text-[11px] font-bold rounded-full border border-emerald-700">
               APPROVED
             </span>
           </div>
         </div>
         <button onClick={() => setOpen(o => !o)}
-          className="p-1.5 text-gray-300 hover:text-gray-500 hover:bg-gray-100 rounded-lg transition-colors shrink-0">
+          className="p-1.5 text-slate-600 hover:text-slate-300 hover:bg-slate-700 rounded-lg transition-colors shrink-0">
           {open ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
         </button>
       </div>
 
       {open && (
-        <div className="border-t border-gray-100 bg-gray-50/50 pt-3">
-          <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider px-4 mb-2">
+        <div className="border-t border-slate-700 bg-slate-900/50 pt-3">
+          <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider px-4 mb-2">
             All transactions — {tx.company}
           </p>
           <HistorySection
@@ -255,8 +255,8 @@ export default function FinanceCheck() {
     <div className="max-w-3xl space-y-8">
 
       <div>
-        <h1 className="text-xl font-semibold text-gray-900">Finance Check</h1>
-        <p className="text-sm text-gray-400 mt-0.5">
+        <h1 className="text-xl font-semibold text-slate-100">Finance Check</h1>
+        <p className="text-sm text-slate-400 mt-0.5">
           Review new B2B entries before they are cleared to proceed.
         </p>
       </div>
@@ -264,20 +264,20 @@ export default function FinanceCheck() {
       {/* ── Needs Approval ── */}
       <section className="space-y-3">
         <div className="flex items-center gap-2">
-          <Clock size={14} className="text-amber-500" />
-          <h2 className="text-sm font-semibold text-gray-800">Awaiting your approval</h2>
+          <Clock size={14} className="text-amber-400" />
+          <h2 className="text-sm font-semibold text-slate-200">Awaiting your approval</h2>
           {pending.length > 0 && (
-            <span className="ml-1 px-2 py-0.5 bg-amber-100 text-amber-700 text-[11px] font-bold rounded-full">
+            <span className="ml-1 px-2 py-0.5 bg-amber-900/40 text-amber-300 text-[11px] font-bold rounded-full border border-amber-700">
               {pending.length}
             </span>
           )}
         </div>
 
         {pending.length === 0 && held.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 border border-dashed border-gray-200 rounded-xl text-center">
-            <ShieldCheck size={28} className="text-gray-200 mb-3" />
-            <p className="text-sm text-gray-400 font-medium">No entries pending approval</p>
-            <p className="text-xs text-gray-300 mt-1">New entries added via "Add B2B" will appear here for review</p>
+          <div className="flex flex-col items-center justify-center py-12 border border-dashed border-slate-700 rounded-xl text-center">
+            <ShieldCheck size={28} className="text-slate-600 mb-3" />
+            <p className="text-sm text-slate-400 font-medium">No entries pending approval</p>
+            <p className="text-xs text-slate-600 mt-1">New entries added via "Add B2B" will appear here for review</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -309,9 +309,9 @@ export default function FinanceCheck() {
       {approved.length > 0 && (
         <section className="space-y-3">
           <div className="flex items-center gap-2">
-            <CheckCircle2 size={14} className="text-emerald-500" />
-            <h2 className="text-sm font-semibold text-gray-800">Approved by Finance</h2>
-            <span className="ml-1 px-2 py-0.5 bg-emerald-50 text-emerald-600 text-[11px] font-bold rounded-full border border-emerald-100">
+            <CheckCircle2 size={14} className="text-emerald-400" />
+            <h2 className="text-sm font-semibold text-slate-200">Approved by Finance</h2>
+            <span className="ml-1 px-2 py-0.5 bg-emerald-900/40 text-emerald-300 text-[11px] font-bold rounded-full border border-emerald-700">
               {approved.length}
             </span>
           </div>

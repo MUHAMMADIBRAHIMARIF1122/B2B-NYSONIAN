@@ -11,14 +11,14 @@ function PrimaryKPI({ label, rawValue, sub, accentBorder, valueCls, bgCls = "", 
   const counted = useCountUp(rawValue, 850, delay);
   return (
     <div
-      className={`kpi-card cursor-default rounded-xl p-5 border border-gray-200 border-l-[3px] ${accentBorder} ${bgCls}`}
+      className={`kpi-card cursor-default rounded-xl p-5 border border-slate-700 border-l-[3px] ${accentBorder} ${bgCls}`}
       style={{ animationDelay: `${delay}ms` }}
     >
-      <p className="text-[11px] text-gray-400 font-medium mb-3">{label}</p>
+      <p className="text-[11px] text-slate-400 font-medium mb-3">{label}</p>
       <p className={`text-[1.9rem] font-bold tracking-tight leading-none ${valueCls}`}>
         {fmt(counted)}
       </p>
-      {sub && <p className="text-[11px] text-gray-400 mt-2">{sub}</p>}
+      {sub && <p className="text-[11px] text-slate-400 mt-2">{sub}</p>}
     </div>
   );
 }
@@ -37,10 +37,10 @@ function BarRow({ company, amount, max, index }) {
   return (
     <div>
       <div className="flex items-center justify-between mb-1.5">
-        <span className="text-sm text-gray-600 truncate">{company}</span>
-        <span className="text-sm font-semibold text-gray-900 ml-3 shrink-0">{fmt(amount)}</span>
+        <span className="text-sm text-slate-400 truncate">{company}</span>
+        <span className="text-sm font-semibold text-slate-100 ml-3 shrink-0">{fmt(amount)}</span>
       </div>
-      <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+      <div className="h-1.5 bg-slate-700 rounded-full overflow-hidden">
         <div
           ref={ref}
           className="h-full bg-indigo-400 rounded-full transition-all duration-700 ease-out"
@@ -100,7 +100,7 @@ function MiniBarChart({ data }) {
               y={H + 13}
               textAnchor="middle"
               fontSize="6.5"
-              fill="#9ca3af"
+              fill="#64748b"
             >
               {d.month}
             </text>
@@ -171,8 +171,8 @@ export default function Dashboard() {
 
       {/* Heading */}
       <div>
-        <h1 className="text-xl font-semibold text-gray-900">Overview</h1>
-        <p className="text-sm text-gray-400 mt-0.5">
+        <h1 className="text-xl font-semibold text-slate-100">Overview</h1>
+        <p className="text-sm text-slate-400 mt-0.5">
           {transactions.length > 0 ? (() => {
             const dates = transactions.map(t => t.invoiceDate).filter(Boolean).sort();
             const fmt2  = d => new Date(d + "T00:00:00").toLocaleDateString("en-US", { month: "short", year: "numeric" });
@@ -183,23 +183,23 @@ export default function Dashboard() {
 
       {/* Primary KPIs */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
-        <PrimaryKPI label="Total Fulfilled"  rawValue={Math.round(totalFulfilled)} sub="All fulfilled invoices"  accentBorder="border-l-indigo-400" valueCls="text-gray-900"   bgCls="bg-white"         delay={0}   />
-        <PrimaryKPI label="Total Received"   rawValue={Math.round(totalReceived)}  sub="Payments collected"      accentBorder="border-l-emerald-400" valueCls="text-gray-900"   bgCls="bg-white"         delay={60}  />
-        <PrimaryKPI label="Outstanding"      rawValue={Math.round(outstanding)}    sub="Partially received"      accentBorder="border-l-amber-400"   valueCls="text-amber-700"  bgCls="bg-amber-50/40"   delay={120} />
-        <PrimaryKPI label="Bad Debt"         rawValue={Math.round(badDebt)}        sub="Flagged in finance notes" accentBorder="border-l-red-400"    valueCls="text-red-600"    bgCls="bg-red-50/40"     delay={180} />
+        <PrimaryKPI label="Total Fulfilled"  rawValue={Math.round(totalFulfilled)} sub="All fulfilled invoices"  accentBorder="border-l-indigo-400" valueCls="text-slate-100"    bgCls="bg-slate-800"           delay={0}   />
+        <PrimaryKPI label="Total Received"   rawValue={Math.round(totalReceived)}  sub="Payments collected"      accentBorder="border-l-emerald-400" valueCls="text-slate-100"   bgCls="bg-slate-800"           delay={60}  />
+        <PrimaryKPI label="Outstanding"      rawValue={Math.round(outstanding)}    sub="Partially received"      accentBorder="border-l-amber-400"   valueCls="text-amber-400"   bgCls="bg-amber-900/30"        delay={120} />
+        <PrimaryKPI label="Bad Debt"         rawValue={Math.round(badDebt)}        sub="Flagged in finance notes" accentBorder="border-l-red-400"    valueCls="text-red-400"     bgCls="bg-red-900/30"          delay={180} />
       </div>
 
       {/* Secondary stats */}
-      <div className="bg-white border border-gray-200 rounded-xl grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-gray-100">
+      <div className="bg-slate-800 border border-slate-700 rounded-xl grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-slate-700">
         {[
           { label: "B2B Companies", value: uniqueCompanies,     sub: "Unique clients"  },
           { label: "Invoices",      value: uniqueInvoices,      sub: "Unique invoices" },
           { label: "Line Items",    value: transactions.length, sub: "Total rows"      },
         ].map(({ label, value, sub }) => (
           <div key={label} className="px-6 py-4">
-            <p className="text-[11px] text-gray-400 font-medium mb-1.5">{label}</p>
-            <p className="text-2xl font-bold text-gray-800">{value.toLocaleString()}</p>
-            <p className="text-[11px] text-gray-400 mt-1">{sub}</p>
+            <p className="text-[11px] text-slate-400 font-medium mb-1.5">{label}</p>
+            <p className="text-2xl font-bold text-slate-100">{value.toLocaleString()}</p>
+            <p className="text-[11px] text-slate-400 mt-1">{sub}</p>
           </div>
         ))}
       </div>
@@ -208,11 +208,11 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
 
         {/* Collection Rate */}
-        <div className="bg-white border border-gray-200 rounded-xl p-5">
-          <p className="text-[11px] text-gray-400 font-medium mb-1">Collection Rate</p>
-          <p className="text-[2rem] font-bold text-emerald-600 leading-none">{collectionRate}%</p>
-          <p className="text-xs text-gray-400 mt-2">Of fulfilled revenue collected</p>
-          <div className="mt-3 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+        <div className="bg-slate-800 border border-slate-700 rounded-xl p-5">
+          <p className="text-[11px] text-slate-400 font-medium mb-1">Collection Rate</p>
+          <p className="text-[2rem] font-bold text-emerald-400 leading-none">{collectionRate}%</p>
+          <p className="text-xs text-slate-400 mt-2">Of fulfilled revenue collected</p>
+          <div className="mt-3 h-1.5 bg-slate-700 rounded-full overflow-hidden">
             <div
               className="h-full bg-emerald-400 rounded-full transition-all duration-1000"
               style={{ width: `${Math.min(collectionRate, 100)}%` }}
@@ -221,21 +221,21 @@ export default function Dashboard() {
         </div>
 
         {/* Avg Order Value */}
-        <div className="bg-white border border-gray-200 rounded-xl p-5">
-          <p className="text-[11px] text-gray-400 font-medium mb-1">Avg Order Value</p>
-          <p className="text-[2rem] font-bold text-indigo-600 leading-none">{fmt(Math.round(avgOrderValue))}</p>
-          <p className="text-xs text-gray-400 mt-2">Per invoice · {invoiceTotals.length} invoices tracked</p>
+        <div className="bg-slate-800 border border-slate-700 rounded-xl p-5">
+          <p className="text-[11px] text-slate-400 font-medium mb-1">Avg Order Value</p>
+          <p className="text-[2rem] font-bold text-indigo-400 leading-none">{fmt(Math.round(avgOrderValue))}</p>
+          <p className="text-xs text-slate-400 mt-2">Per invoice · {invoiceTotals.length} invoices tracked</p>
         </div>
 
         {/* At-Risk Accounts */}
-        <div className={`rounded-xl p-5 border ${atRiskCompanies.length > 0 ? "bg-orange-50/50 border-orange-200" : "bg-white border-gray-200"}`}>
-          <p className="text-[11px] text-gray-400 font-medium mb-1">At-Risk Accounts</p>
-          <p className={`text-[2rem] font-bold leading-none ${atRiskCompanies.length > 0 ? "text-orange-600" : "text-gray-800"}`}>
+        <div className={`rounded-xl p-5 border ${atRiskCompanies.length > 0 ? "bg-orange-900/30 border-orange-700/50" : "bg-slate-800 border-slate-700"}`}>
+          <p className="text-[11px] text-slate-400 font-medium mb-1">At-Risk Accounts</p>
+          <p className={`text-[2rem] font-bold leading-none ${atRiskCompanies.length > 0 ? "text-orange-400" : "text-slate-100"}`}>
             {atRiskCompanies.length}
           </p>
-          <p className="text-xs text-gray-400 mt-2">Due or Partially Received</p>
+          <p className="text-xs text-slate-400 mt-2">Due or Partially Received</p>
           {atRiskCompanies.length > 0 && (
-            <p className="text-[11px] text-orange-500 mt-2 leading-snug break-words">{atRiskCompanies.join(" · ")}</p>
+            <p className="text-[11px] text-orange-400 mt-2 leading-snug break-words">{atRiskCompanies.join(" · ")}</p>
           )}
         </div>
       </div>
@@ -244,24 +244,24 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
         {/* Payment Terms breakdown */}
-        <div className="bg-white border border-gray-200 rounded-xl p-5">
-          <h3 className="text-sm font-semibold text-gray-800">Sales by Payment Terms</h3>
-          <p className="text-xs text-gray-400 mt-0.5 mb-5">Total revenue per net term</p>
+        <div className="bg-slate-800 border border-slate-700 rounded-xl p-5">
+          <h3 className="text-sm font-semibold text-slate-100">Sales by Payment Terms</h3>
+          <p className="text-xs text-slate-400 mt-0.5 mb-5">Total revenue per net term</p>
           <div className="space-y-4">
             {termRows.map(([term, { count, amount }]) => {
               const pct = ((amount / termsMax) * 100).toFixed(1);
-              const color = TERMS_COLOR[term] || "#d1d5db";
+              const color = TERMS_COLOR[term] || "#475569";
               return (
                 <div key={term}>
                   <div className="flex items-center justify-between mb-1.5">
                     <div className="flex items-center gap-2">
                       <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: color }} />
-                      <span className="text-sm text-gray-700 font-medium">{term}</span>
-                      <span className="text-xs text-gray-400">{count} orders</span>
+                      <span className="text-sm text-slate-300 font-medium">{term}</span>
+                      <span className="text-xs text-slate-500">{count} orders</span>
                     </div>
-                    <span className="text-sm font-semibold text-gray-900">{fmt(amount)}</span>
+                    <span className="text-sm font-semibold text-slate-100">{fmt(amount)}</span>
                   </div>
-                  <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                  <div className="h-1.5 bg-slate-700 rounded-full overflow-hidden">
                     <div
                       className="h-full rounded-full transition-all duration-700 ease-out"
                       style={{ width: `${pct}%`, backgroundColor: color }}
@@ -274,9 +274,9 @@ export default function Dashboard() {
         </div>
 
         {/* Top Clients */}
-        <div className="bg-white border border-gray-200 rounded-xl p-5">
-          <h3 className="text-sm font-semibold text-gray-800">Top Clients by Revenue</h3>
-          <p className="text-xs text-gray-400 mt-0.5 mb-5">Total invoice value</p>
+        <div className="bg-slate-800 border border-slate-700 rounded-xl p-5">
+          <h3 className="text-sm font-semibold text-slate-100">Top Clients by Revenue</h3>
+          <p className="text-xs text-slate-400 mt-0.5 mb-5">Total invoice value</p>
           <div className="space-y-4">
             {topCustomers.map(([company, amount], i) => (
               <BarRow key={company} company={company} amount={amount} max={topCustomers[0][1]} index={i} />
@@ -285,18 +285,18 @@ export default function Dashboard() {
         </div>
 
         {/* Monthly Revenue Trend */}
-        <div className="bg-white border border-gray-200 rounded-xl p-5">
-          <h3 className="text-sm font-semibold text-gray-800">Monthly Revenue</h3>
-          <p className="text-xs text-gray-400 mt-0.5 mb-4">Fulfilled vs Received · last 10 months</p>
+        <div className="bg-slate-800 border border-slate-700 rounded-xl p-5">
+          <h3 className="text-sm font-semibold text-slate-100">Monthly Revenue</h3>
+          <p className="text-xs text-slate-400 mt-0.5 mb-4">Fulfilled vs Received · last 10 months</p>
           <MiniBarChart data={monthlyRevenue} />
           <div className="flex items-center gap-5 mt-3">
             <div className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-sm bg-indigo-300" />
-              <span className="text-[10px] text-gray-400">Fulfilled</span>
+              <span className="text-[10px] text-slate-400">Fulfilled</span>
             </div>
             <div className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-sm bg-emerald-400" />
-              <span className="text-[10px] text-gray-400">Received</span>
+              <span className="text-[10px] text-slate-400">Received</span>
             </div>
           </div>
         </div>
