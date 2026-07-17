@@ -98,6 +98,20 @@ async function runMigrations() {
     `);
     await pool.query("ALTER TABLE b2b.entries ADD COLUMN IF NOT EXISTS fulfillment_status TEXT DEFAULT ''");
     await pool.query("ALTER TABLE b2b.entries ADD COLUMN IF NOT EXISTS fulfillment_ready_date DATE");
+
+    // Dedicated fulfillment table — works for BOTH static and DB orders
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS b2b.fulfillment (
+        id                     SERIAL PRIMARY KEY,
+        order_key              TEXT UNIQUE NOT NULL,
+        fulfillment_status     TEXT NOT NULL DEFAULT '',
+        fulfilled_month        TEXT NOT NULL DEFAULT '',
+        shipment_date          DATE,
+        delivery               TEXT NOT NULL DEFAULT 'Company',
+        fulfillment_ready_date DATE,
+        updated_at             TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
     console.log("[DB] Migrations complete");
   } catch (err) {
     console.error("[DB] Migration error:", err.message);
@@ -268,24 +282,52 @@ app.patch("/api/fulfillment/:orderNo", requireApiKey, writeLimiter, async (req, 
 
   try {
     const safeDate = (v) => (v && /^\d{4}-\d{2}-\d{2}$/.test(v)) ? v : null;
-    const WHERE = `WHERE order_no = $1 OR (COALESCE(order_no, '') = '' AND invoice = $1)`;
 
-    await pool.query(
-      `UPDATE b2b.entries SET fulfillment_status = $2, fulfilled_month = COALESCE(NULLIF($3,''),fulfilled_month), delivery = COALESCE(NULLIF($4,''),delivery) ${WHERE}`,
-      [orderNo, fulfillmentStatus ?? "", fulfilledMonth || "", delivery || ""]
-    );
+    if (fulfillmentStatus === "") {
+      // Reset — remove from dedicated table so it falls back to "pending"
+      await pool.query(`DELETE FROM b2b.fulfillment WHERE order_key = $1`, [orderNo]);
+    } else {
+      // Upsert into dedicated fulfillment table (works for static AND DB orders)
+      await pool.query(`
+        INSERT INTO b2b.fulfillment
+          (order_key, fulfillment_status, fulfilled_month, shipment_date, delivery, fulfillment_ready_date, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, NOW())
+        ON CONFLICT (order_key) DO UPDATE SET
+          fulfillment_status     = EXCLUDED.fulfillment_status,
+          fulfilled_month        = CASE WHEN EXCLUDED.fulfilled_month <> '' THEN EXCLUDED.fulfilled_month ELSE b2b.fulfillment.fulfilled_month END,
+          shipment_date          = COALESCE(EXCLUDED.shipment_date, b2b.fulfillment.shipment_date),
+          delivery               = CASE WHEN EXCLUDED.delivery <> '' THEN EXCLUDED.delivery ELSE b2b.fulfillment.delivery END,
+          fulfillment_ready_date = COALESCE(EXCLUDED.fulfillment_ready_date, b2b.fulfillment.fulfillment_ready_date),
+          updated_at             = NOW()
+      `, [
+        orderNo,
+        fulfillmentStatus,
+        fulfilledMonth || "",
+        safeDate(shipmentDate),
+        delivery || "Company",
+        safeDate(readyDate),
+      ]);
+    }
 
-    const sd = safeDate(shipmentDate);
-    if (sd) await pool.query(`UPDATE b2b.entries SET shipment_date = $2 ${WHERE}`, [orderNo, sd]);
-
-    const rd = safeDate(readyDate);
-    if (rd) await pool.query(`UPDATE b2b.entries SET fulfillment_ready_date = $2 ${WHERE}`, [orderNo, rd]);
-
-    console.log(`[~] Fulfillment updated: order=${orderNo}, status=${fulfillmentStatus}`);
+    console.log(`[~] Fulfillment saved: order=${orderNo}, status=${fulfillmentStatus}`);
     res.json({ ok: true });
   } catch (err) {
     console.error("Fulfillment update error:", err.message);
     res.status(500).json({ ok: false, error: "Failed to update fulfillment.", detail: err.message });
+  }
+});
+
+// ── GET /api/fulfillment ──────────────────────────────────────────────────────
+app.get("/api/fulfillment", requireApiKey, async (_req, res) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT order_key, fulfillment_status, fulfilled_month, shipment_date, delivery, fulfillment_ready_date
+       FROM b2b.fulfillment ORDER BY updated_at DESC`
+    );
+    res.json({ ok: true, fulfillment: rows });
+  } catch (err) {
+    console.error("Fulfillment fetch error:", err.message);
+    res.status(500).json({ ok: false, error: "Failed to fetch fulfillment data." });
   }
 });
 

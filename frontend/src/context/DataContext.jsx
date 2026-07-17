@@ -30,7 +30,7 @@ function mapRow(r) {
     financeRemarks:  r.finance_remarks || "",
     closedWon:       r.closed_won     || "",
     currency:        r.currency       || "USD",
-    fulfillment:          r.fulfillment_status     || '',
+    fulfillment:          r.fulfillment_status     || "",
     fulfillmentReadyDate: r.fulfillment_ready_date || null,
   };
 }
@@ -42,34 +42,51 @@ function parseMonthKey(m) {
 }
 
 export function DataProvider({ children }) {
-  const [dbTx,               setDbTx]               = useState([]);
-  const [fulfillmentOverrides, setFulfillmentOverrides] = useState({});
-  const [inventory,          setInventory]          = useState(initialInventory);
-  const [loading,            setLoading]            = useState(true);
+  const [dbTx,          setDbTx]          = useState([]);
+  const [fulfillmentMap, setFulfillmentMap] = useState({}); // orderKey → fulfillment record
+  const [inventory,     setInventory]     = useState(initialInventory);
+  const [loading,       setLoading]       = useState(true);
 
-  function fetchEntries() {
+  function fetchAll() {
     setLoading(true);
-    fetch("/api/b2b-entries", { headers: { "x-api-key": API_KEY } })
-      .then(r => r.json())
-      .then(data => { if (data.ok) setDbTx(data.entries.map(mapRow)); })
-      .catch(() => {})
-      .finally(() => setLoading(false));
+    Promise.all([
+      fetch("/api/b2b-entries",  { headers: { "x-api-key": API_KEY } }).then(r => r.json()).catch(() => ({ ok: false })),
+      fetch("/api/fulfillment",  { headers: { "x-api-key": API_KEY } }).then(r => r.json()).catch(() => ({ ok: false })),
+    ]).then(([entriesData, fulfillmentData]) => {
+      if (entriesData.ok)    setDbTx(entriesData.entries.map(mapRow));
+      if (fulfillmentData.ok) {
+        const map = {};
+        fulfillmentData.fulfillment.forEach(f => {
+          map[f.order_key] = {
+            fulfillment:          f.fulfillment_status     || "",
+            fulfillmentReadyDate: f.fulfillment_ready_date || null,
+            fulfilledMonth:       f.fulfilled_month        || "",
+            shipmentDate:         f.shipment_date          || null,
+            delivery:             f.delivery               || "Company",
+          };
+        });
+        setFulfillmentMap(map);
+      }
+    }).finally(() => setLoading(false));
   }
 
-  useEffect(() => { fetchEntries(); }, []);
+  useEffect(() => { fetchAll(); }, []);
 
-  // Merge static + DB: DB rows take precedence (they have authoritative IDs)
-  // Apply in-memory fulfillment overrides on top (works for both static and DB rows)
+  // Merge static + DB rows, then overlay fulfillment data from b2b.fulfillment table.
+  // fulfillmentMap is keyed by orderNo || invoice and works for both static and DB rows.
   const transactions = useMemo(() => {
     const dbIds = new Set(dbTx.map(t => t.id));
     const staticOnly = staticTx.filter(t => !dbIds.has(t.id));
     const all = [...staticOnly, ...dbTx];
-    if (Object.keys(fulfillmentOverrides).length === 0) return all;
+
+    if (Object.keys(fulfillmentMap).length === 0) return all;
+
     return all.map(t => {
-      const ov = fulfillmentOverrides[t.id];
-      return ov ? { ...t, ...ov } : t;
+      const key = t.orderNo || t.invoice || String(t.id);
+      const f   = fulfillmentMap[key];
+      return f ? { ...t, ...f } : t;
     });
-  }, [dbTx, fulfillmentOverrides]);
+  }, [dbTx, fulfillmentMap]);
 
   // Compute monthly revenue from merged transactions (last 10 months)
   const monthlyRevenue = useMemo(() => {
@@ -88,22 +105,19 @@ export function DataProvider({ children }) {
       .sort((a, b) => parseMonthKey(a.key) - parseMonthKey(b.key))
       .slice(-10)
       .map(d => ({
-        month:     d.key.split("-")[0].slice(0, 3), // "July-2025" → "Jul"
+        month:     d.key.split("-")[0].slice(0, 3),
         fulfilled: d.fulfilled,
         received:  d.received,
       }));
   }, [transactions]);
 
-  // Re-fetch after a new entry is submitted so it appears immediately
-  function refreshEntries() { fetchEntries(); }
+  function refreshEntries() { fetchAll(); }
 
-  function addTransaction() { /* no-op — DB is source of truth; call refreshEntries() after POST */ }
+  function addTransaction() { /* no-op — DB is source of truth */ }
 
   function removeTransactions(ids) {
-    // Optimistic update — remove from UI immediately
     const set = new Set(ids);
     setDbTx(prev => prev.filter(t => !set.has(t.id)));
-    // Persist to DB — only delete DB rows (static rows have no server record)
     const dbIds = ids.filter(id => dbTx.some(t => t.id === id));
     if (dbIds.length > 0) {
       fetch("/api/b2b-entries", {
@@ -126,12 +140,7 @@ export function DataProvider({ children }) {
     setDbTx(prev => prev.map(t => t.id === id ? { ...t, approvalStatus: "held" } : t));
   }
 
-  function setFulfillmentStatus(id, status, readyDate = null) {
-    setFulfillmentOverrides(prev => ({
-      ...prev,
-      [id]: { fulfillment: status, fulfillmentReadyDate: readyDate },
-    }));
-  }
+  function setFulfillmentStatus() { /* no-op — all fulfillment goes through API now */ }
 
   function updateInventoryItem(id, changes) {
     setInventory(prev => prev.map(item => item.id === id ? { ...item, ...changes } : item));
