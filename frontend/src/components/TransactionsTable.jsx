@@ -159,7 +159,7 @@ export default function TransactionsTable() {
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3 items-center">
-        <div className="relative flex-1 min-w-[220px]">
+        <div className="relative w-full sm:flex-1 sm:min-w-[220px]">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input type="text" placeholder="Search customer, product, SKU, invoice..."
             value={search} onChange={e => setSearch(e.target.value)}
@@ -171,7 +171,7 @@ export default function TransactionsTable() {
         <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className={selectCls}>
           {statuses.map(s => <option key={s}>{s}</option>)}
         </select>
-        <div className="ml-auto flex items-center gap-2 text-sm">
+        <div className="flex items-center gap-2 text-sm sm:ml-auto">
           <span className="text-gray-400">{filtered.length} rows</span>
           <span className="px-3 py-1.5 rounded-lg bg-indigo-50 border border-indigo-100 text-indigo-700 font-semibold">
             {new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(totalAmount)}

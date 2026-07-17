@@ -24,22 +24,38 @@ const TABS = [
 export default function App() {
   const [activeTab,   setActiveTab]   = useState(() => localStorage.getItem("activeTab") || "dashboard");
   const [pageKey,     setPageKey]     = useState(0);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  // Default: open on desktop, closed on mobile
+  const [sidebarOpen, setSidebarOpen] = useState(() =>
+    typeof window !== "undefined" ? window.innerWidth >= 768 : true
+  );
   const active = TABS.find(t => t.id === activeTab);
 
   function switchTab(id) {
-    if (id === activeTab) return;
     setActiveTab(id);
     localStorage.setItem("activeTab", id);
     setPageKey(k => k + 1);
+    // Auto-close sidebar on mobile after navigation
+    if (typeof window !== "undefined" && window.innerWidth < 768) {
+      setSidebarOpen(false);
+    }
   }
 
   return (
     <div className="flex min-h-screen bg-gray-50">
 
-      {/* Sidebar */}
+      {/* Mobile backdrop */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/30 z-20 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar
+          Mobile:  fixed overlay (slides in/out via width)
+          Desktop: sticky inline (affects layout flow via width) */}
       <aside
-        className="shrink-0 flex flex-col bg-white border-r border-gray-200 overflow-hidden transition-all duration-250 ease-in-out sticky top-0 h-screen"
+        className="fixed md:sticky top-0 left-0 z-30 h-screen flex flex-col bg-white border-r border-gray-200 overflow-hidden transition-all duration-250 ease-in-out md:shrink-0"
         style={{ width: sidebarOpen ? "216px" : "0px" }}
       >
         <div className="w-[216px] flex flex-col flex-1">
@@ -63,7 +79,7 @@ export default function App() {
           </div>
 
           {/* Nav */}
-          <nav className="flex-1 px-2 space-y-0.5">
+          <nav className="flex-1 px-2 space-y-0.5 overflow-y-auto">
             {TABS.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -73,7 +89,7 @@ export default function App() {
                   {isAdd && <div className="border-t border-gray-100 my-2" />}
                   <button
                     onClick={() => switchTab(tab.id)}
-                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-colors whitespace-nowrap ${
+                    className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-[13px] font-medium transition-colors whitespace-nowrap ${
                       isActive
                         ? isAdd
                           ? "bg-indigo-600 text-white"
@@ -101,23 +117,24 @@ export default function App() {
       {/* Main */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
-        <header className="h-12 flex items-center px-5 border-b border-gray-200 bg-white gap-3 shrink-0">
-          {!sidebarOpen && (
+        <header className="h-12 flex items-center px-4 border-b border-gray-200 bg-white gap-3 shrink-0">
+          {/* Menu button — always visible on mobile, visible on desktop when sidebar closed */}
+          {(!sidebarOpen) && (
             <button
               onClick={() => setSidebarOpen(true)}
-              className="p-1 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors mr-1"
+              className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors shrink-0"
             >
               <Menu size={15} />
             </button>
           )}
-          <div className="flex items-center gap-1.5 text-[13px]">
-            <span className="text-gray-400">Nysonian Inc.</span>
-            <ChevronRight size={12} className="text-gray-300" />
-            <span className="text-gray-800 font-medium">{active?.label}</span>
+          <div className="flex items-center gap-1.5 text-[13px] min-w-0">
+            <span className="text-gray-400 shrink-0 hidden sm:block">Nysonian Inc.</span>
+            <ChevronRight size={12} className="text-gray-300 shrink-0 hidden sm:block" />
+            <span className="text-gray-800 font-medium truncate">{active?.label}</span>
           </div>
         </header>
 
-        <main key={pageKey} className="flex-1 overflow-auto p-6 page-enter">
+        <main key={pageKey} className="flex-1 overflow-auto p-4 sm:p-6 page-enter">
           {activeTab === "dashboard"    && <Dashboard />}
           {activeTab === "transactions" && <TransactionsTable />}
           {activeTab === "revenue"      && <RevenueChart />}

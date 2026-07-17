@@ -43,7 +43,7 @@ export default function RevenueChart() {
 
   return (
     <div className="space-y-6 max-w-screen-xl">
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h1 className="text-xl font-semibold text-gray-900">Revenue Chart</h1>
           <p className="text-sm text-gray-400 mt-0.5">Monthly fulfilled vs. received — Jun 2025 to Mar 2026</p>
@@ -66,7 +66,7 @@ export default function RevenueChart() {
       </div>
 
       {/* Summary cards */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
           <p className="text-xs text-gray-400 uppercase tracking-widest mb-2">Total Fulfilled</p>
           <p className="text-2xl font-bold text-indigo-600">{fmt(totalFulfilled)}</p>
@@ -140,6 +140,7 @@ export default function RevenueChart() {
         <div className="px-6 py-4 border-b border-gray-100">
           <h3 className="text-sm font-semibold text-gray-800">Monthly Breakdown</h3>
         </div>
+        <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-100">
           <thead className="bg-gray-50">
             <tr>
@@ -173,6 +174,7 @@ export default function RevenueChart() {
             </tr>
           </tfoot>
         </table>
+        </div>
       </div>
     </div>
   );

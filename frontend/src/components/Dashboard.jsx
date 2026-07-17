@@ -182,7 +182,7 @@ export default function Dashboard() {
       </div>
 
       {/* Primary KPIs */}
-      <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
         <PrimaryKPI label="Total Fulfilled"  rawValue={Math.round(totalFulfilled)} sub="All fulfilled invoices"  accentBorder="border-l-indigo-400" valueCls="text-gray-900"   bgCls="bg-white"         delay={0}   />
         <PrimaryKPI label="Total Received"   rawValue={Math.round(totalReceived)}  sub="Payments collected"      accentBorder="border-l-emerald-400" valueCls="text-gray-900"   bgCls="bg-white"         delay={60}  />
         <PrimaryKPI label="Outstanding"      rawValue={Math.round(outstanding)}    sub="Partially received"      accentBorder="border-l-amber-400"   valueCls="text-amber-700"  bgCls="bg-amber-50/40"   delay={120} />
@@ -190,7 +190,7 @@ export default function Dashboard() {
       </div>
 
       {/* Secondary stats */}
-      <div className="bg-white border border-gray-200 rounded-xl grid grid-cols-3 divide-x divide-gray-100">
+      <div className="bg-white border border-gray-200 rounded-xl grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-gray-100">
         {[
           { label: "B2B Companies", value: uniqueCompanies,     sub: "Unique clients"  },
           { label: "Invoices",      value: uniqueInvoices,      sub: "Unique invoices" },
@@ -205,7 +205,7 @@ export default function Dashboard() {
       </div>
 
       {/* Insight mini cards */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
 
         {/* Collection Rate */}
         <div className="bg-white border border-gray-200 rounded-xl p-5">
@@ -235,13 +235,13 @@ export default function Dashboard() {
           </p>
           <p className="text-xs text-gray-400 mt-2">Due or Partially Received</p>
           {atRiskCompanies.length > 0 && (
-            <p className="text-[11px] text-orange-500 mt-2 leading-snug">{atRiskCompanies.join(" · ")}</p>
+            <p className="text-[11px] text-orange-500 mt-2 leading-snug break-words">{atRiskCompanies.join(" · ")}</p>
           )}
         </div>
       </div>
 
       {/* Main panels row */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
         {/* Payment Terms breakdown */}
         <div className="bg-white border border-gray-200 rounded-xl p-5">

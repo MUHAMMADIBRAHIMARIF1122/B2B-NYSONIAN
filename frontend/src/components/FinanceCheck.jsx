@@ -136,7 +136,7 @@ function ApprovalCard({ tx, transactions, onApprove, onHold, isHeld }) {
         </div>
 
         {/* Product & terms */}
-        <div className="mt-3 grid grid-cols-3 gap-3 text-xs">
+        <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
           <div className="bg-gray-50 rounded-lg px-3 py-2">
             <p className="text-gray-400 mb-0.5">Product</p>
             <p className="font-medium text-gray-700 truncate">{tx.product || "—"}</p>
@@ -159,14 +159,14 @@ function ApprovalCard({ tx, transactions, onApprove, onHold, isHeld }) {
         )}
 
         {/* Actions row */}
-        <div className="mt-4 flex items-center gap-2">
+        <div className="mt-4 flex flex-wrap items-center gap-2">
           <button onClick={() => setOpen(o => !o)}
             className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors">
             {open ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
             {open ? "Hide" : "View"} company history
           </button>
           {!isHeld && (
-            <div className="ml-auto flex items-center gap-2">
+            <div className="sm:ml-auto flex items-center gap-2">
               <button onClick={() => onHold(tx.id)}
                 className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-red-600 border border-red-200 bg-red-50 rounded-lg hover:bg-red-100 transition-colors">
                 <X size={12} /> Hold
@@ -203,30 +203,29 @@ function ApprovedCard({ tx }) {
 
   return (
     <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-      <div className="px-5 py-3 flex items-center gap-4">
-        <div className="w-8 h-8 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center shrink-0">
+      <div className="px-5 py-3 flex items-start gap-3">
+        <div className="w-8 h-8 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center shrink-0 mt-0.5">
           <CheckCircle2 size={15} className="text-emerald-500" />
         </div>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <p className="text-[13px] font-semibold text-gray-900">{tx.company}</p>
-            <span className="text-[11px] text-gray-400">·</span>
-            <span className="text-xs text-gray-400">{tx.customer}</span>
+            <span className="text-xs text-gray-400 hidden sm:inline">{tx.customer}</span>
             {tx.invoice && <span className="font-mono text-xs text-indigo-500 font-semibold">INV {tx.invoice}</span>}
           </div>
-          <p className="text-xs text-gray-400 mt-0.5">{tx.product}{tx.invoiceDate ? ` · ${tx.invoiceDate}` : ""}</p>
+          <p className="text-xs text-gray-400 mt-0.5 truncate">{tx.product}{tx.invoiceDate ? ` · ${tx.invoiceDate}` : ""}</p>
+          <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+            <StatusBadge status={tx.status} />
+            <span className="text-sm font-bold text-gray-700">{fmtNum(tx.total)}</span>
+            <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 text-[11px] font-bold rounded-full border border-emerald-100">
+              APPROVED
+            </span>
+          </div>
         </div>
-        <div className="flex items-center gap-3 shrink-0">
-          <StatusBadge status={tx.status} />
-          <span className="text-sm font-bold text-gray-700">{fmtNum(tx.total)}</span>
-          <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 text-[11px] font-bold rounded-full border border-emerald-100">
-            APPROVED
-          </span>
-          <button onClick={() => setOpen(o => !o)}
-            className="p-1.5 text-gray-300 hover:text-gray-500 hover:bg-gray-100 rounded-lg transition-colors">
-            {open ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
-          </button>
-        </div>
+        <button onClick={() => setOpen(o => !o)}
+          className="p-1.5 text-gray-300 hover:text-gray-500 hover:bg-gray-100 rounded-lg transition-colors shrink-0">
+          {open ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+        </button>
       </div>
 
       {open && (

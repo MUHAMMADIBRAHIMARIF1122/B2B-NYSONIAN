@@ -96,12 +96,12 @@ export default function ClientTracker() {
     <div className="space-y-5 max-w-screen-xl">
 
       {/* Header */}
-      <div className="flex items-end justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="text-xl font-semibold text-gray-900">Client Tracker</h1>
           <p className="text-sm text-gray-400 mt-0.5">{filtered.length} client{filtered.length !== 1 ? "s" : ""} · all B2B transactions</p>
         </div>
-        <div className="flex gap-1.5">
+        <div className="flex gap-1.5 flex-wrap">
           {[
             { key: "amount",   label: "By Invoiced" },
             { key: "received", label: "By Received" },
@@ -123,7 +123,7 @@ export default function ClientTracker() {
       </div>
 
       {/* Search */}
-      <div className="relative max-w-xs">
+      <div className="relative w-full sm:max-w-xs">
         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
         <input
           type="text"
@@ -135,7 +135,7 @@ export default function ClientTracker() {
       </div>
 
       {/* Stats strip */}
-      <div className="bg-white border border-gray-200 rounded-xl grid grid-cols-3 divide-x divide-gray-100">
+      <div className="bg-white border border-gray-200 rounded-xl grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-gray-100">
         {[
           { label: "Total Invoiced",   value: fmt(totalInvoiced) },
           { label: "Total Received",   value: fmt(totalReceived) },
@@ -219,12 +219,12 @@ export default function ClientTracker() {
                     {client.invoiceRows
                       .sort((a, b) => (b.invoiceDate || "").localeCompare(a.invoiceDate || ""))
                       .map((row, j) => (
-                        <div key={j} className="flex items-center gap-3 py-1">
-                          <span className="text-xs font-mono text-gray-400 w-28 shrink-0 truncate">{row.invoice || "—"}</span>
-                          <span className="text-xs text-gray-400 w-20 shrink-0">{row.invoiceDate || "—"}</span>
-                          <span className="flex-1 text-xs text-gray-500 truncate">{row.product || "—"}</span>
+                        <div key={j} className="flex items-center gap-2 py-1.5 flex-wrap sm:flex-nowrap">
+                          <span className="text-xs font-mono text-gray-400 shrink-0 min-w-[80px]">{row.invoice || "—"}</span>
+                          <span className="text-xs text-gray-400 shrink-0 hidden sm:block">{row.invoiceDate || "—"}</span>
+                          <span className="flex-1 text-xs text-gray-500 truncate min-w-0">{row.product || "—"}</span>
                           <span className={`text-[10px] px-1.5 py-0.5 rounded border font-medium shrink-0 ${statusColor(row.status)}`}>{row.status || "—"}</span>
-                          <span className="text-xs font-semibold text-gray-800 shrink-0 w-20 text-right">{fmt(row.total)}</span>
+                          <span className="text-xs font-semibold text-gray-800 shrink-0 text-right">{fmt(row.total)}</span>
                         </div>
                       ))}
                   </div>

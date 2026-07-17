@@ -196,7 +196,7 @@ export default function Fulfillment() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-white border border-gray-200 rounded-xl p-5">
           <div className="flex items-center justify-between mb-3">
             <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-widest">Pending</span>
@@ -232,7 +232,7 @@ export default function Fulfillment() {
       </div>
 
       {/* Tabs + Search */}
-      <div className="flex items-center justify-between gap-4 flex-wrap">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-xl">
           {[
             { key: "pending",   label: "Pending",       count: pending.length,   color: "amber"   },
@@ -264,7 +264,7 @@ export default function Fulfillment() {
             placeholder="Search company or invoice…"
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-64 pl-8 pr-4 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-400 placeholder:text-gray-400"
+            className="w-full sm:w-64 pl-8 pr-4 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-400 placeholder:text-gray-400"
           />
         </div>
       </div>
@@ -323,7 +323,7 @@ export default function Fulfillment() {
                 </div>
 
                 {/* Products table */}
-                <div className="mt-4 rounded-lg border border-gray-100 overflow-hidden">
+                <div className="mt-4 rounded-lg border border-gray-100 overflow-x-auto">
                   <table className="w-full text-xs">
                     <thead>
                       <tr className="bg-gray-50 border-b border-gray-100">
@@ -368,7 +368,7 @@ export default function Fulfillment() {
                   {isActioning && actionType === "available" && (
                     <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-5 mt-1">
                       <p className="text-sm font-semibold text-emerald-800 mb-4">Confirm availability — fill shipment details</p>
-                      <div className="grid grid-cols-3 gap-4 mb-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
                         <FieldInput label="Fulfilled month" required>
                           <select value={formData.fulfilledMonth}
                             onChange={e => setFormData(f => ({ ...f, fulfilledMonth: e.target.value }))}
@@ -487,7 +487,7 @@ export default function Fulfillment() {
               {/* Expanded detail */}
               {isExpanded && (
                 <div className="border-t border-gray-100 bg-gray-50/60 px-6 py-5">
-                  <div className="grid grid-cols-3 gap-x-8 gap-y-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-8 gap-y-4">
                     {[
                       ["Invoice #",       order.invoice],
                       ["Order #",         order.orderNo],

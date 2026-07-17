@@ -456,12 +456,12 @@ export default function AddB2B() {
       <form onSubmit={mode === "edit" ? handleUpdate : handleSubmit} className="space-y-4">
 
           {/* ── Row 1: Who + Invoice details ── */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
             {/* Who */}
             <SectionCard>
               <SectionTitle>Who is this for?</SectionTitle>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label req>Customer name</Label>
                   <AutocompleteInput value={form.customer} onChange={v => set("customer", v)}
@@ -488,7 +488,7 @@ export default function AddB2B() {
             {/* Invoice details */}
             <SectionCard>
               <SectionTitle>Invoice details</SectionTitle>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                   <Label req>Invoice #</Label>
                   <input value={form.invoice} onChange={e => set("invoice", e.target.value)}
@@ -530,7 +530,7 @@ export default function AddB2B() {
                     <p className="text-[11px] font-semibold text-gray-400 mb-3">Line item {idx + 1}</p>
                   )}
 
-                  <div className="grid grid-cols-2 gap-3 mb-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                     <div>
                       <Label>Product &amp; Colour</Label>
                       <AutocompleteInput
@@ -561,7 +561,7 @@ export default function AddB2B() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
                       <Label req>Quantity</Label>
                       <input type="number" min="1" step="1" value={item.qty}
@@ -608,7 +608,7 @@ export default function AddB2B() {
           {/* ── Payment ── */}
           <SectionCard>
             <SectionTitle>Payment details</SectionTitle>
-            <div className="grid grid-cols-3 gap-4 mb-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
               <div>
                 <Label>Terms</Label>
                 <select value={form.paymentTerms} onChange={e => set("paymentTerms", e.target.value)} className={sel()}>
@@ -630,7 +630,7 @@ export default function AddB2B() {
                 <p className="text-[11px] text-gray-400 mt-1">Passed to Xero on sync</p>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label>Status</Label>
                 <select value={form.status} onChange={e => set("status", e.target.value)} className={sel()}>
@@ -648,7 +648,7 @@ export default function AddB2B() {
           {/* ── Notes ── */}
           <SectionCard>
             <SectionTitle>Notes</SectionTitle>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label>Remarks</Label>
                 <textarea value={form.remarks} onChange={e => set("remarks", e.target.value)}
@@ -672,7 +672,7 @@ export default function AddB2B() {
           )}
 
           {/* ── Submit ── */}
-          <div className="flex items-center justify-between py-2 pb-8">
+          <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3 py-2 pb-8">
             <p className="text-xs text-gray-400"><span className="text-red-400">*</span> required fields</p>
             <div className="flex items-center gap-3">
               {mode === "edit" && (
