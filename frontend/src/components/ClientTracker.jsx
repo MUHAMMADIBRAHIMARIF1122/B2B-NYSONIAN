@@ -2,65 +2,95 @@ import { useState, useMemo } from "react";
 import { useData } from "../context/DataContext";
 import { Search } from "lucide-react";
 
-const fmt      = (n) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n);
+const fmt      = (n) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);
 const fmtShort = (n) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", notation: "compact", maximumFractionDigits: 1 }).format(n);
 
 const COLORS = [
-  { avatar: "bg-indigo-500",  ring: "ring-indigo-100", tag: "bg-indigo-50 text-indigo-600 border-indigo-100" },
+  { avatar: "bg-indigo-500",  ring: "ring-indigo-100",  tag: "bg-indigo-50 text-indigo-600 border-indigo-100" },
   { avatar: "bg-emerald-500", ring: "ring-emerald-100", tag: "bg-emerald-50 text-emerald-600 border-emerald-100" },
-  { avatar: "bg-violet-500",  ring: "ring-violet-100", tag: "bg-violet-50 text-violet-600 border-violet-100" },
-  { avatar: "bg-cyan-500",    ring: "ring-cyan-100", tag: "bg-cyan-50 text-cyan-600 border-cyan-100" },
-  { avatar: "bg-rose-500",    ring: "ring-rose-100", tag: "bg-rose-50 text-rose-600 border-rose-100" },
-  { avatar: "bg-amber-500",   ring: "ring-amber-100", tag: "bg-amber-50 text-amber-600 border-amber-100" },
-  { avatar: "bg-blue-500",    ring: "ring-blue-100", tag: "bg-blue-50 text-blue-600 border-blue-100" },
+  { avatar: "bg-violet-500",  ring: "ring-violet-100",  tag: "bg-violet-50 text-violet-600 border-violet-100" },
+  { avatar: "bg-cyan-500",    ring: "ring-cyan-100",    tag: "bg-cyan-50 text-cyan-600 border-cyan-100" },
+  { avatar: "bg-rose-500",    ring: "ring-rose-100",    tag: "bg-rose-50 text-rose-600 border-rose-100" },
+  { avatar: "bg-amber-500",   ring: "ring-amber-100",   tag: "bg-amber-50 text-amber-600 border-amber-100" },
+  { avatar: "bg-blue-500",    ring: "ring-blue-100",    tag: "bg-blue-50 text-blue-600 border-blue-100" },
 ];
 
-const ALL = "All Months";
+function statusColor(status) {
+  if (status === "Paid" || status === "Received") return "text-emerald-600 bg-emerald-50 border-emerald-200";
+  if (status === "Partially Received")             return "text-amber-600  bg-amber-50  border-amber-200";
+  if (status === "Due")                            return "text-red-600    bg-red-50    border-red-200";
+  return "text-gray-500 bg-gray-50 border-gray-200";
+}
 
 export default function ClientTracker() {
-  const { vendors, transactions } = useData();
-  const [search,      setSearch]      = useState("");
-  const [monthFilter, setMonthFilter] = useState(ALL);
-  const [sortBy,      setSortBy]      = useState("amount");
+  const { transactions } = useData();
+  const [search,  setSearch]  = useState("");
+  const [sortBy,  setSortBy]  = useState("amount");
+  const [expanded, setExpanded] = useState(null);
 
+  // Aggregate transactions per company
   const clients = useMemo(() => {
     const map = {};
-    vendors.forEach(v => {
-      if (!map[v.vendor]) map[v.vendor] = { name: v.vendor, invoices: [], totalAmount: 0, months: new Set() };
-      map[v.vendor].invoices.push(v);
-      map[v.vendor].totalAmount += v.amount;
-      map[v.vendor].months.add(v.month);
+    transactions.forEach(t => {
+      const key = t.company || "—";
+      if (!map[key]) {
+        map[key] = {
+          company:      key,
+          customer:     t.customer || "",
+          paymentTerms: t.paymentTerms || "",
+          currency:     t.currency || "USD",
+          totalInvoiced: 0,
+          totalReceived: 0,
+          invoiceRows:   [],
+          invoiceNos:    new Set(),
+          statuses:      new Set(),
+          lastInvoiceDate: null,
+        };
+      }
+      const c = map[key];
+      // Update customer/terms from latest entry (highest id)
+      if (!c._latestId || t.id > c._latestId) {
+        c._latestId   = t.id;
+        c.customer    = t.customer || c.customer;
+        c.paymentTerms = t.paymentTerms || c.paymentTerms;
+        c.currency    = t.currency || c.currency;
+      }
+      c.totalInvoiced += t.total || 0;
+      if (t.status === "Paid" || t.status === "Received") {
+        c.totalReceived += t.total || 0;
+      }
+      c.invoiceNos.add(t.invoice);
+      c.statuses.add(t.status);
+      if (t.invoiceDate && (!c.lastInvoiceDate || t.invoiceDate > c.lastInvoiceDate)) {
+        c.lastInvoiceDate = t.invoiceDate;
+      }
+      c.invoiceRows.push(t);
     });
-    return Object.values(map);
-  }, []);
 
-  const b2bAmounts = useMemo(() => {
-    const map = {};
-    transactions.forEach(t => { map[t.company] = (map[t.company] || 0) + t.total; });
-    return map;
-  }, []);
-
-  const monthList = useMemo(() => [ALL, ...new Set(vendors.map(v => v.month))], []);
+    return Object.values(map).map(c => ({
+      ...c,
+      outstanding:  c.totalInvoiced - c.totalReceived,
+      invoiceCount: c.invoiceNos.size,
+      rowCount:     c.invoiceRows.length,
+    }));
+  }, [transactions]);
 
   let filtered = clients;
   if (search) {
     const q = search.toLowerCase();
-    filtered = filtered.filter(c => c.name.toLowerCase().includes(q));
-  }
-  if (monthFilter !== ALL) {
-    filtered = filtered
-      .map(c => ({ ...c, invoices: c.invoices.filter(i => i.month === monthFilter) }))
-      .filter(c => c.invoices.length > 0)
-      .map(c => ({ ...c, totalAmount: c.invoices.reduce((s, i) => s + i.amount, 0) }));
+    filtered = filtered.filter(c =>
+      c.company.toLowerCase().includes(q) || c.customer.toLowerCase().includes(q)
+    );
   }
   filtered = [...filtered].sort((a, b) =>
-    sortBy === "amount"   ? b.totalAmount - a.totalAmount :
-    sortBy === "invoices" ? b.invoices.length - a.invoices.length :
-    a.name.localeCompare(b.name)
+    sortBy === "amount"   ? b.totalInvoiced - a.totalInvoiced :
+    sortBy === "received" ? b.totalReceived - a.totalReceived :
+    a.company.localeCompare(b.company)
   );
 
-  const totalAmount   = filtered.reduce((s, c) => s + c.totalAmount, 0);
-  const totalInvoices = filtered.reduce((s, c) => s + c.invoices.length, 0);
+  const totalInvoiced  = filtered.reduce((s, c) => s + c.totalInvoiced, 0);
+  const totalReceived  = filtered.reduce((s, c) => s + c.totalReceived, 0);
+  const totalOutstanding = totalInvoiced - totalReceived;
 
   return (
     <div className="space-y-5 max-w-screen-xl">
@@ -69,12 +99,12 @@ export default function ClientTracker() {
       <div className="flex items-end justify-between">
         <div>
           <h1 className="text-xl font-semibold text-gray-900">Client Tracker</h1>
-          <p className="text-sm text-gray-400 mt-0.5">All clients, invoices, and amounts</p>
+          <p className="text-sm text-gray-400 mt-0.5">{filtered.length} client{filtered.length !== 1 ? "s" : ""} · all B2B transactions</p>
         </div>
         <div className="flex gap-1.5">
           {[
-            { key: "amount",   label: "By Amount" },
-            { key: "invoices", label: "By Invoices" },
+            { key: "amount",   label: "By Invoiced" },
+            { key: "received", label: "By Received" },
             { key: "name",     label: "A–Z" },
           ].map(opt => (
             <button
@@ -92,37 +122,24 @@ export default function ClientTracker() {
         </div>
       </div>
 
-      {/* Search + filter */}
-      <div className="flex gap-3">
-        <div className="relative flex-1">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search clients..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white"
-          />
-        </div>
-        <select
-          value={monthFilter}
-          onChange={e => setMonthFilter(e.target.value)}
-          className="px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-400"
-        >
-          {monthList.map(m => (
-            <option key={m} value={m}>
-              {m === ALL ? "All Months" : m.replace("-2025", " '25").replace("-2026", " '26")}
-            </option>
-          ))}
-        </select>
+      {/* Search */}
+      <div className="relative max-w-xs">
+        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+        <input
+          type="text"
+          placeholder="Search clients..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-400 bg-white"
+        />
       </div>
 
       {/* Stats strip */}
       <div className="bg-white border border-gray-200 rounded-xl grid grid-cols-3 divide-x divide-gray-100">
         {[
-          { label: "Clients",        value: filtered.length.toString() },
-          { label: "Total Amount",   value: fmt(totalAmount) },
-          { label: "Total Invoices", value: totalInvoices.toString() },
+          { label: "Total Invoiced",   value: fmt(totalInvoiced) },
+          { label: "Total Received",   value: fmt(totalReceived) },
+          { label: "Outstanding",      value: fmt(totalOutstanding) },
         ].map(({ label, value }) => (
           <div key={label} className="px-6 py-4">
             <p className="text-[11px] text-gray-400 font-medium mb-1.5">{label}</p>
@@ -131,72 +148,88 @@ export default function ClientTracker() {
         ))}
       </div>
 
-      {/* Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+      {/* Client cards */}
+      <div className="space-y-3">
         {filtered.map((client, i) => {
           const c        = COLORS[i % COLORS.length];
-          const initials = client.name === "—" ? "?" :
-            client.name.split(" ").filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join("");
-          const b2bAmt   = b2bAmounts[client.name];
+          const initials = client.company === "—" ? "?" :
+            client.company.split(" ").filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join("");
+          const isOpen   = expanded === client.company;
+          const pctCollected = client.totalInvoiced > 0
+            ? ((client.totalReceived / client.totalInvoiced) * 100).toFixed(0)
+            : 0;
 
           return (
             <div
-              key={client.name}
-              className="client-card bg-white border border-gray-200 rounded-xl overflow-hidden"
+              key={client.company}
+              className="bg-white border border-gray-200 rounded-xl overflow-hidden"
             >
-              {/* Card top */}
-              <div className="px-5 pt-5 pb-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className={`w-9 h-9 rounded-full ${c.avatar} ring-4 ${c.ring} flex items-center justify-center shrink-0 text-xs font-bold text-white`}>
-                      {initials}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold text-gray-900 truncate leading-tight">{client.name}</p>
-                      <p className="text-xs text-gray-400 mt-0.5">
-                        {client.invoices.length} invoice{client.invoices.length !== 1 ? "s" : ""}
-                        {" · "}
-                        {[...client.months].length} month{[...client.months].length !== 1 ? "s" : ""}
-                      </p>
+              {/* Card top — clickable to expand */}
+              <button
+                onClick={() => setExpanded(isOpen ? null : client.company)}
+                className="w-full text-left px-5 py-4 hover:bg-gray-50/60 transition-colors"
+              >
+                <div className="flex items-center gap-4">
+                  {/* Avatar */}
+                  <div className={`w-10 h-10 rounded-full ${c.avatar} ring-4 ${c.ring} flex items-center justify-center shrink-0 text-xs font-bold text-white`}>
+                    {initials}
+                  </div>
+
+                  {/* Name + meta */}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-gray-900 truncate">{client.company}</p>
+                    <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                      {client.customer && (
+                        <span className="text-xs text-gray-400">{client.customer}</span>
+                      )}
+                      {client.paymentTerms && (
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded border font-medium ${c.tag}`}>{client.paymentTerms}</span>
+                      )}
+                      {client.currency && client.currency !== "USD" && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded border font-medium bg-gray-50 text-gray-500 border-gray-200">{client.currency}</span>
+                      )}
+                      <span className="text-[10px] text-gray-400">{client.invoiceCount} invoice{client.invoiceCount !== 1 ? "s" : ""} · {client.rowCount} line{client.rowCount !== 1 ? "s" : ""}</span>
                     </div>
                   </div>
-                  <div className="text-right shrink-0">
-                    <p className="text-base font-bold text-gray-900">{fmtShort(client.totalAmount)}</p>
-                    {b2bAmt && (
-                      <p className="text-[10px] text-emerald-600 font-medium mt-0.5">+{fmtShort(b2bAmt)} B2B</p>
+
+                  {/* Amounts */}
+                  <div className="text-right shrink-0 space-y-0.5">
+                    <p className="text-sm font-bold text-gray-900">{fmtShort(client.totalInvoiced)}</p>
+                    <p className="text-xs text-emerald-600 font-medium">{fmtShort(client.totalReceived)} received</p>
+                    {client.outstanding > 0.01 && (
+                      <p className="text-xs text-amber-600">{fmtShort(client.outstanding)} outstanding</p>
                     )}
                   </div>
                 </div>
-              </div>
 
-              {/* Divider */}
-              <div className="border-t border-gray-100" />
+                {/* Progress bar */}
+                <div className="mt-3 h-1 bg-gray-100 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-emerald-400 rounded-full transition-all duration-700"
+                    style={{ width: `${Math.min(pctCollected, 100)}%` }}
+                  />
+                </div>
+                <p className="text-[10px] text-gray-400 mt-1">{pctCollected}% collected</p>
+              </button>
 
-              {/* Invoice list */}
-              <div className="px-5 py-3 space-y-2">
-                {client.invoices.map((inv, j) => (
-                  <div key={j} className="flex items-center justify-between gap-3">
-                    <span className="text-xs font-mono text-gray-400 shrink-0">{inv.inv}</span>
-                    <span className="text-xs text-gray-300 shrink-0">
-                      {inv.month.replace("-2025", "'25").replace("-2026", "'26")}
-                    </span>
-                    <span className="flex-1 h-px bg-gray-100" />
-                    <span className="text-xs font-medium text-gray-700 shrink-0">{fmt(inv.amount)}</span>
+              {/* Expanded: invoice rows */}
+              {isOpen && (
+                <div className="border-t border-gray-100">
+                  <div className="px-5 py-3 space-y-1.5 max-h-64 overflow-y-auto">
+                    {client.invoiceRows
+                      .sort((a, b) => (b.invoiceDate || "").localeCompare(a.invoiceDate || ""))
+                      .map((row, j) => (
+                        <div key={j} className="flex items-center gap-3 py-1">
+                          <span className="text-xs font-mono text-gray-400 w-28 shrink-0 truncate">{row.invoice || "—"}</span>
+                          <span className="text-xs text-gray-400 w-20 shrink-0">{row.invoiceDate || "—"}</span>
+                          <span className="flex-1 text-xs text-gray-500 truncate">{row.product || "—"}</span>
+                          <span className={`text-[10px] px-1.5 py-0.5 rounded border font-medium shrink-0 ${statusColor(row.status)}`}>{row.status || "—"}</span>
+                          <span className="text-xs font-semibold text-gray-800 shrink-0 w-20 text-right">{fmt(row.total)}</span>
+                        </div>
+                      ))}
                   </div>
-                ))}
-              </div>
-
-              {/* Footer months */}
-              <div className="px-5 py-3 border-t border-gray-50 flex flex-wrap gap-1">
-                {[...client.months].map(m => (
-                  <span
-                    key={m}
-                    className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${c.tag}`}
-                  >
-                    {m.replace("-2025", " '25").replace("-2026", " '26")}
-                  </span>
-                ))}
-              </div>
+                </div>
+              )}
             </div>
           );
         })}

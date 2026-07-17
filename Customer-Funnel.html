@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Nysonian B2B — Customer Funnel Flowchart</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.page {
+  max-width: 1000px;
+  margin: 36px auto 60px;
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.12);
+  overflow: hidden;
+}
+
+/* ── Header ───────────────────────────────────────── */
+.hdr {
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  padding: 36px 48px 32px;
+  color: #fff;
+}
+.hdr-top { display:flex; align-items:center; gap:12px; margin-bottom:18px; }
+.hdr-icon {
+  width:38px; height:38px; border-radius:10px;
+  background:rgba(255,255,255,0.2);
+  display:flex; align-items:center; justify-content:center;
+  font-size:18px;
+}
+.hdr-brand { font-size:13px; font-weight:600; opacity:.85; }
+.hdr h1 { font-size:26px; font-weight:800; letter-spacing:-.4px; }
+.hdr p  { font-size:13px; opacity:.7; margin-top:5px; }
+.hdr-pills { display:flex; gap:8px; margin-top:16px; flex-wrap:wrap; }
+.hdr-pill {
+  font-size:10.5px; font-weight:600;
+  background:rgba(255,255,255,0.15);
+  border:1px solid rgba(255,255,255,0.25);
+  border-radius:20px; padding:3px 12px;
+}
+
+/* ── Canvas ───────────────────────────────────────── */
+.canvas { padding: 44px 48px 52px; }
+
+/* ── Node styles ──────────────────────────────────── */
+.node {
+  border-radius: 10px;
+  padding: 11px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  position: relative;
+  display: inline-block;
+  white-space: nowrap;
+}
+.node sub {
+  display:block;
+  font-size:10.5px;
+  font-weight:400;
+  color:inherit;
+  opacity:.75;
+  margin-top:2px;
+  white-space:normal;
+}
+.node-start {
+  background: #0f172a; color: #fff;
+  padding: 13px 36px;
+  font-size: 14px;
+  border-radius: 40px;
+}
+.node-shared {
+  background: #f8fafc;
+  border: 1.5px solid #cbd5e1;
+  color: #334155;
+  min-width: 300px;
+}
+.node-new {
+  background: #eef2ff;
+  border: 2px solid #818cf8;
+  color: #3730a3;
+  min-width: 200px;
+}
+.node-existing {
+  background: #f0fdf4;
+  border: 2px solid #4ade80;
+  color: #14532d;
+  min-width: 200px;
+}
+.node-db {
+  background: #faf5ff;
+  border: 1.5px solid #c084fc;
+  color: #581c87;
+  min-width: 200px;
+}
+.node-xero {
+  background: #fff7ed;
+  border: 1.5px solid #fdba74;
+  color: #7c2d12;
+  min-width: 300px;
+}
+.node-section {
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  color: #1e293b;
+  font-size: 12px;
+  padding: 10px 14px;
+  min-width: 120px;
+}
+.node-section .sec-icon { font-size:16px; display:block; margin-bottom:4px; }
+
+/* ── Decision diamond ─────────────────────────────── */
+.diamond-wrap { display:flex; justify-content:center; }
+.diamond {
+  width: 140px; height: 140px;
+  background: #fefce8;
+  border: 2px solid #fbbf24;
+  transform: rotate(45deg);
+  display:flex; align-items:center; justify-content:center;
+  position:relative;
+}
+.diamond-inner {
+  transform: rotate(-45deg);
+  text-align:center;
+  font-size:12px; font-weight:700; color:#78350f;
+  line-height:1.3;
+  padding:0 8px;
+}
+
+/* ── Connectors ───────────────────────────────────── */
+/* Vertical arrow */
+.v { display:flex; justify-content:center; }
+.v-line {
+  width: 2px;
+  background: #94a3b8;
+  position: relative;
+}
+.v-line::after {
+  content:'';
+  position:absolute; bottom:-6px; left:50%; transform:translateX(-50%);
+  border-left:5px solid transparent;
+  border-right:5px solid transparent;
+  border-top:7px solid #94a3b8;
+}
+.v-sm  { height:24px; }
+.v-md  { height:36px; }
+.v-lg  { height:48px; }
+
+/* Fork structure */
+.fork-container {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  width:100%;
+}
+
+.fork-h-bar {
+  display:flex;
+  width:520px;
+  align-items:flex-start;
+}
+.fork-h-line {
+  flex:1;
+  border-top: 2px solid #94a3b8;
+  margin-top:0;
+}
+.fork-h-center { width:2px; background:#94a3b8; height:2px; } /* middle point */
+
+.fork-branches {
+  display:flex;
+  width:520px;
+  gap:0;
+}
+.fork-branch {
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+.fork-branch-left  { border-right: none; }
+.fork-branch-right { border-left:  none; }
+
+/* branch vertical lines */
+.branch-v {
+  width:2px;
+  background: #94a3b8;
+  position:relative;
+}
+.branch-v.down::after {
+  content:'';
+  position:absolute; bottom:-6px; left:50%; transform:translateX(-50%);
+  border-left:5px solid transparent;
+  border-right:5px solid transparent;
+  border-top:7px solid #94a3b8;
+}
+.branch-v.up::before {
+  content:'';
+  position:absolute; top:-1px; left:50%; transform:translateX(-50%);
+  /* no arrowhead on way up to merge */
+}
+
+/* Fork T-bar top */
+.fork-tbar-top {
+  width: 520px;
+  display:flex;
+  align-items:flex-end;
+  height:24px;
+  position:relative;
+}
+.fork-tbar-top::before {
+  content:'';
+  position:absolute;
+  top:0; left:50%; transform:translateX(-50%);
+  width:2px; height:24px;
+  background:#94a3b8;
+}
+.fork-tbar-top::after {
+  content:'';
+  position:absolute;
+  top:23px; left:25%; right:25%;
+  height:2px;
+  background:#94a3b8;
+}
+
+/* Fork T-bar bottom (merge) */
+.fork-tbar-bottom {
+  width: 520px;
+  height: 36px;
+  position: relative;
+}
+.fork-tbar-bottom::before {
+  content:'';
+  position:absolute;
+  top:0; left:25%; right:25%;
+  height:2px;
+  background:#94a3b8;
+}
+.fork-tbar-bottom::after {
+  content:'';
+  position:absolute;
+  top:0; left:50%; transform:translateX(-50%);
+  width:2px; height:36px;
+  background:#94a3b8;
+}
+/* arrowhead on merge */
+.fork-tbar-bottom .arrow-tip {
+  position:absolute;
+  bottom:-6px; left:50%; transform:translateX(-50%);
+  border-left:5px solid transparent;
+  border-right:5px solid transparent;
+  border-top:7px solid #94a3b8;
+}
+
+/* DB fork (simpler, smaller) */
+.db-fork-tbar-top {
+  width: 440px;
+  height: 24px;
+  position: relative;
+}
+.db-fork-tbar-top::before {
+  content:'';
+  position:absolute;
+  top:0; left:50%; transform:translateX(-50%);
+  width:2px; height:24px;
+  background:#94a3b8;
+}
+.db-fork-tbar-top::after {
+  content:'';
+  position:absolute;
+  top:23px; left:22%; right:22%;
+  height:2px;
+  background:#94a3b8;
+}
+
+.db-fork-branches {
+  display:flex;
+  width:440px;
+  gap:0;
+}
+.db-fork-tbar-bottom {
+  width:440px;
+  height:36px;
+  position:relative;
+}
+.db-fork-tbar-bottom::before {
+  content:'';
+  position:absolute;
+  top:0; left:22%; right:22%;
+  height:2px;
+  background:#94a3b8;
+}
+.db-fork-tbar-bottom::after {
+  content:'';
+  position:absolute;
+  top:0; left:50%; transform:translateX(-50%);
+  width:2px; height:36px;
+  background:#94a3b8;
+}
+.db-fork-tbar-bottom .arrow-tip {
+  position:absolute;
+  bottom:-6px; left:50%; transform:translateX(-50%);
+  border-left:5px solid transparent;
+  border-right:5px solid transparent;
+  border-top:7px solid #94a3b8;
+}
+
+/* Final sections fan-out */
+.sections-fan {
+  display:flex;
+  gap:10px;
+  justify-content:center;
+  flex-wrap:wrap;
+  margin-top:8px;
+}
+
+/* Label tags */
+.tag {
+  display:inline-block;
+  font-size:9.5px; font-weight:600;
+  padding:1.5px 7px; border-radius:20px;
+  margin-top:4px; margin-right:3px;
+}
+.tag-i { background:#e0e7ff; color:#3730a3; }
+.tag-e { background:#dcfce7; color:#14532d; }
+.tag-a { background:#fef3c7; color:#78350f; }
+.tag-r { background:#fee2e2; color:#991b1b; }
+
+/* Row helpers */
+.row { display:flex; justify-content:center; }
+
+/* Section label */
+.flow-label {
+  font-size:10px; font-weight:700;
+  letter-spacing:1px; text-transform:uppercase;
+  color:#94a3b8; text-align:center;
+  margin-bottom:6px;
+}
+
+/* Legend */
+.legend {
+  display:flex; gap:20px; justify-content:center;
+  margin-top:32px; padding-top:24px;
+  border-top:1px solid #f1f5f9;
+  flex-wrap:wrap;
+}
+.legend-item { display:flex; align-items:center; gap:7px; font-size:11px; color:#64748b; }
+.legend-dot { width:12px; height:12px; border-radius:3px; flex-shrink:0; }
+
+@media print {
+  body { background:#fff; }
+  .page { margin:0; box-shadow:none; border-radius:0; }
+  .canvas { padding:28px 36px 40px; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <div class="hdr">
+    <div class="hdr-top">
+      <div class="hdr-icon">🏢</div>
+      <span class="hdr-brand">Nysonian Inc. · Finance</span>
+    </div>
+    <h1>B2B Customer Funnel — Flowchart</h1>
+    <p>End-to-end process from entry to all system sections · based on implemented features only</p>
+    <div class="hdr-pills">
+      <span class="hdr-pill">New Customer</span>
+      <span class="hdr-pill">Existing Customer</span>
+      <span class="hdr-pill">Invoice lifecycle</span>
+      <span class="hdr-pill">DB Save</span>
+      <span class="hdr-pill">Xero DRAFT</span>
+    </div>
+  </div>
+
+  <!-- Flowchart canvas -->
+  <div class="canvas">
+
+    <!-- ① START -->
+    <div class="row">
+      <div class="node node-start">🏁 &nbsp;Add B2B Entry Form</div>
+    </div>
+
+    <!-- Arrow down to fork -->
+    <div class="v"><div class="v-line v-sm"></div></div>
+
+    <!-- ── FORK: New vs Existing ── -->
+    <div class="fork-container">
+
+      <!-- T-bar splitting down -->
+      <div class="fork-tbar-top"></div>
+
+      <!-- Two branches -->
+      <div class="fork-branches">
+
+        <!-- Left: New Customer -->
+        <div class="fork-branch fork-branch-left">
+          <div class="branch-v down" style="height:0"></div>
+          <div class="row"><div class="node node-new">
+            ✦ &nbsp;New Customer
+            <sub>All fields blank — enter manually</sub>
+          </div></div>
+          <div class="branch-v" style="height:20px"></div>
+          <div class="row"><div class="node node-new" style="font-size:11.5px; min-width:180px;">
+            No history in system
+            <sub>Customer &amp; company typed fresh</sub>
+          </div></div>
+          <div class="branch-v" style="height:24px"></div>
+        </div>
+
+        <!-- Right: Existing Customer -->
+        <div class="fork-branch fork-branch-right">
+          <div class="branch-v down" style="height:0"></div>
+          <div class="row"><div class="node node-existing">
+            ↺ &nbsp;Existing Customer
+            <sub>Prior invoices already in system</sub>
+          </div></div>
+          <div class="branch-v" style="height:20px"></div>
+          <div class="row"><div class="node node-existing" style="font-size:11.5px; min-width:180px;">
+            Auto-fill on select
+            <sub>Company · Payment terms · Delivery</sub>
+          </div></div>
+          <div class="branch-v" style="height:24px"></div>
+        </div>
+
+      </div>
+
+      <!-- T-bar merging back -->
+      <div class="fork-tbar-bottom"><div class="arrow-tip"></div></div>
+
+    </div>
+    <!-- END FORK -->
+
+    <!-- ② Invoice # -->
+    <div class="row">
+      <div class="node node-shared">
+        🔢 &nbsp;Invoice Number Auto-Generated
+        <sub>Scans all INV-XXX entries → assigns next sequential number &nbsp;<span class="tag tag-i">INV-001 format</span></sub>
+      </div>
+    </div>
+
+    <div class="v"><div class="v-line v-md"></div></div>
+
+    <!-- ③ Order # -->
+    <div class="row">
+      <div class="node node-shared">
+        🆔 &nbsp;Order # Auto-Generated
+        <sub>Unique reference per submission &nbsp;<span class="tag tag-i">MO-YYMMDD-XXXX</span></sub>
+      </div>
+    </div>
+
+    <div class="v"><div class="v-line v-md"></div></div>
+
+    <!-- ④ Line items -->
+    <div class="row">
+      <div class="node node-shared">
+        📦 &nbsp;Add Line Items
+        <sub>Product &amp; Colour · SKU (auto-fills colour) · Qty · Unit price · Line total auto-calculated &nbsp;<span class="tag tag-a">Multiple items supported</span></sub>
+      </div>
+    </div>
+
+    <div class="v"><div class="v-line v-md"></div></div>
+
+    <!-- ⑤ Payment details -->
+    <div class="row">
+      <div class="node node-shared">
+        💳 &nbsp;Set Payment Details
+        <sub>Payment terms · Due date&nbsp;<span class="tag tag-r">required</span> · Currency · Status · Payment received date</sub>
+      </div>
+    </div>
+
+    <div class="v"><div class="v-line v-md"></div></div>
+
+    <!-- ⑥ Fulfillment info -->
+    <div class="row">
+      <div class="node node-shared">
+        🚚 &nbsp;Set Fulfillment Info
+        <sub>Fulfilled month · Shipment date · Delivery method · Payment rec. month</sub>
+      </div>
+    </div>
+
+    <div class="v"><div class="v-line v-md"></div></div>
+
+    <!-- ⑦ Notes -->
+    <div class="row">
+      <div class="node node-shared">
+        📝 &nbsp;Add Notes (optional)
+        <sub>Remarks · Finance remarks</sub>
+      </div>
+    </div>
+
+    <div class="v"><div class="v-line v-md"></div></div>
+
+    <!-- ⑧ Submit -->
+    <div class="row">
+      <div class="node node-start" style="background:#059669; border-radius:10px; padding:13px 32px;">
+        ✅ &nbsp;Submit — Add Entry
+      </div>
+    </div>
+
+    <!-- Arrow to DB fork -->
+    <div class="v"><div class="v-line v-sm"></div></div>
+
+    <!-- ── DB FORK ── -->
+    <div class="fork-container">
+
+      <div class="db-fork-tbar-top"></div>
+
+      <div class="db-fork-branches">
+
+        <!-- b2b.entries -->
+        <div class="fork-branch">
+          <div class="branch-v" style="height:0"></div>
+          <div class="row"><div class="node node-db">
+            🗄️ &nbsp;b2b.entries
+            <sub>All line items saved to PostgreSQL</sub>
+          </div></div>
+          <div class="branch-v" style="height:24px"></div>
+        </div>
+
+        <!-- b2b.clients -->
+        <div class="fork-branch">
+          <div class="branch-v" style="height:0"></div>
+          <div class="row"><div class="node node-db">
+            👥 &nbsp;b2b.clients
+            <sub>New client created · or existing updated</sub>
+          </div></div>
+          <div class="branch-v" style="height:24px"></div>
+        </div>
+
+      </div>
+
+      <div class="db-fork-tbar-bottom"><div class="arrow-tip"></div></div>
+    </div>
+    <!-- END DB FORK -->
+
+    <!-- ⑨ Xero -->
+    <div class="row">
+      <div class="node node-xero">
+        🔗 &nbsp;Xero DRAFT Invoice Created
+        <sub>ACCREC invoice pushed to Xero Demo Company · all line items + currency included &nbsp;<span class="tag tag-a">DRAFT status</span></sub>
+      </div>
+    </div>
+
+    <div class="v"><div class="v-line v-md"></div></div>
+
+    <!-- ⑩ Refresh -->
+    <div class="row">
+      <div class="node node-shared">
+        🔄 &nbsp;Frontend Refreshes from Database
+        <sub>refreshEntries() called → all sections reload with latest data</sub>
+      </div>
+    </div>
+
+    <div class="v"><div class="v-line v-md"></div></div>
+
+    <!-- Final: all sections -->
+    <div class="flow-label">Entry now visible in all sections</div>
+    <div class="sections-fan">
+      <div class="node node-section"><span class="sec-icon">📊</span>Dashboard<sub>KPIs, charts, top clients</sub></div>
+      <div class="node node-section"><span class="sec-icon">📋</span>Transactions<sub>Searchable table · edit</sub></div>
+      <div class="node node-section"><span class="sec-icon">👥</span>Client Tracker<sub>Per-company totals</sub></div>
+      <div class="node node-section"><span class="sec-icon">🛡️</span>Finance Check<sub>Overdue · bad debt</sub></div>
+      <div class="node node-section"><span class="sec-icon">📦</span>Fulfillment<sub>Available / Not available</sub></div>
+      <div class="node node-section"><span class="sec-icon">📈</span>Revenue Chart<sub>Fulfilled vs Received</sub></div>
+    </div>
+
+    <!-- Legend -->
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#818cf8;border:1.5px solid #6366f1"></div>New customer path</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#4ade80;border:1.5px solid #22c55e"></div>Existing customer path</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#e2e8f0;border:1.5px solid #cbd5e1"></div>Shared steps</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#c084fc;border:1.5px solid #a855f7"></div>Database operations</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#fdba74;border:1.5px solid #fb923c"></div>Xero integration</div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

@@ -1,7 +1,6 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { useData } from "../context/DataContext";
 import { CheckCircle, ChevronDown, UserCheck, Package, PlusCircle, X } from "lucide-react";
-import StatusBadge from "./StatusBadge";
 import { productCatalog, colorForSku } from "../data/products";
 
 const PAYMENT_TERMS = ["Net 0", "Net 30", "Net 40", "Net 45", "Net 60"];
@@ -105,20 +104,39 @@ const emptyForm = () => ({
   invoice: "", invoiceDate: "",
   currency: "USD",
   paymentTerms: "", dueDate: "", orderNo: generateOrderNo(),
-  status: "", paymentRecDate: "", shipmentDate: "",
-  fulfilledMonth: "", paymentRecMonth: "",
-  delivery: "Company", remarks: "", financeRemarks: "",
+  status: "", paymentRecDate: "",
+  remarks: "", financeRemarks: "",
 });
+
+// ── Layout helpers (defined outside component to prevent remount on re-render) ─
+function SectionCard({ children }) {
+  return <div className="bg-white border border-gray-200 rounded-xl p-6">{children}</div>;
+}
+function SectionTitle({ children }) {
+  return <p className="text-sm font-semibold text-gray-800 mb-5">{children}</p>;
+}
 
 // ── Main component ────────────────────────────────────────────────────────────
 export default function AddB2B() {
-  const { addTransaction, updateTransaction, transactions } = useData();
+  const { refreshEntries, transactions } = useData();
   const [form,       setForm]       = useState(emptyForm);
   const [errors,     setErrors]     = useState({});
   const [mode,       setMode]       = useState("add"); // "add" | "success" | "edit"
   const [savedEntry, setSavedEntry] = useState(null);
   const [saveError,  setSaveError]  = useState(null);
   const [submitting, setSubmitting] = useState(false);
+
+  // Auto-generate next invoice number (INV-001 format) when form resets to empty
+  useEffect(() => {
+    if (mode !== "add" || form.invoice !== "") return;
+    if (transactions.length === 0) return;
+    const invNums = transactions
+      .map(t => t.invoice)
+      .filter(inv => /^INV-\d+$/.test(inv))
+      .map(inv => parseInt(inv.split("-")[1], 10));
+    const max = invNums.length > 0 ? Math.max(...invNums) : 0;
+    setForm(f => ({ ...f, invoice: `INV-${String(max + 1).padStart(3, "0")}` }));
+  }, [mode, transactions]);
 
   // Grand total across all line items
   const total = form.lineItems.reduce(
@@ -261,10 +279,10 @@ export default function AddB2B() {
       orderNo:         form.orderNo,
       status:          form.status || "Due",
       paymentRecDate:  form.paymentRecDate,
-      shipmentDate:    form.shipmentDate,
-      fulfilledMonth:  form.fulfilledMonth,
-      paymentRecMonth: form.paymentRecMonth,
-      delivery:        form.delivery,
+      shipmentDate:    null,
+      fulfilledMonth:  "",
+      paymentRecMonth: "",
+      delivery:        "",
       remarks:         form.remarks.trim(),
       financeRemarks:  form.financeRemarks.trim(),
       closedWon:       "",
@@ -298,20 +316,10 @@ export default function AddB2B() {
       return;
     }
 
-    // Only update local state after confirmed server save
-    lineItems.forEach(item => {
-      addTransaction({
-        ...header,
-        product:   item.product,
-        sku:       item.sku,
-        qty:       item.qty,
-        unitPrice: item.unitPrice,
-        total:     Number((item.qty * item.unitPrice).toFixed(2)),
-      });
-    });
+    // Refresh DB entries so new data appears everywhere immediately
+    refreshEntries();
 
-    const newId = Math.max(0, ...transactions.map(t => t.id)) + 1;
-    setSavedEntry({ ...header, lineItems: form.lineItems, id: newId, xeroInvoiceId });
+    setSavedEntry({ ...header, lineItems: form.lineItems, id: Date.now(), xeroInvoiceId });
     setSubmitting(false);
     setMode("success");
   }
@@ -331,10 +339,6 @@ export default function AddB2B() {
       orderNo:         f.orderNo         || "",
       status:          f.status          || "",
       paymentRecDate:  f.paymentRecDate  || "",
-      shipmentDate:    f.shipmentDate    || "",
-      fulfilledMonth:  f.fulfilledMonth  || "",
-      paymentRecMonth: f.paymentRecMonth || "",
-      delivery:        f.delivery        || "Company",
       remarks:         f.remarks         || "",
       financeRemarks:  f.financeRemarks  || "",
     });
@@ -362,10 +366,10 @@ export default function AddB2B() {
       orderNo:         form.orderNo,
       status:          form.status || "Due",
       paymentRecDate:  form.paymentRecDate,
-      shipmentDate:    form.shipmentDate,
-      fulfilledMonth:  form.fulfilledMonth,
-      paymentRecMonth: form.paymentRecMonth,
-      delivery:        form.delivery,
+      shipmentDate:    null,
+      fulfilledMonth:  "",
+      paymentRecMonth: "",
+      delivery:        "",
       remarks:         form.remarks.trim(),
       financeRemarks:  form.financeRemarks.trim(),
       closedWon:       savedEntry.closedWon || "",
@@ -396,19 +400,8 @@ export default function AddB2B() {
       return;
     }
 
-    // Update local state to reflect changes
-    lineItems.forEach((item, idx) => {
-      const updatedItem = {
-        ...header,
-        product:   item.product,
-        sku:       item.sku,
-        qty:       item.qty,
-        unitPrice: item.unitPrice,
-        total:     Number((item.qty * item.unitPrice).toFixed(2)),
-        id:        savedEntry.id + idx,
-      };
-      updateTransaction(savedEntry.id + idx, updatedItem);
-    });
+    // Refresh DB entries so edits appear everywhere immediately
+    refreshEntries();
 
     setSavedEntry({ ...header, lineItems: form.lineItems, id: savedEntry.id });
     setSubmitting(false);
@@ -447,11 +440,10 @@ export default function AddB2B() {
     );
   }
 
-  const hasPreview = form.company || form.customer || form.invoice || form.lineItems.some(li => li.product || li.productVariant) || total > 0;
 
   // ── Form ──────────────────────────────────────────────────────────────────
   return (
-    <div className="max-w-screen-lg">
+    <div className="max-w-screen-xl">
       <div className="mb-6">
         <h1 className="text-xl font-semibold text-gray-900">{mode === "edit" ? "Edit Entry" : "New B2B Entry"}</h1>
         <p className="text-sm text-gray-400 mt-0.5">
@@ -461,68 +453,68 @@ export default function AddB2B() {
         </p>
       </div>
 
-      <div className="flex gap-8 items-start">
-        <form onSubmit={mode === "edit" ? handleUpdate : handleSubmit} className="flex-1 min-w-0 space-y-7">
+      <form onSubmit={mode === "edit" ? handleUpdate : handleSubmit} className="space-y-4">
 
-          {/* ── Who ── */}
-          <div>
-            <Divider title="Who is this for?" />
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label req>Customer name</Label>
-                <AutocompleteInput value={form.customer} onChange={v => set("customer", v)}
-                  onSelect={handleCustomerSelect} options={customerOptions}
-                  placeholder="Jerry Kallman" error={errors.customer} />
-                {errors.customer && <FieldError />}
+          {/* ── Row 1: Who + Invoice details ── */}
+          <div className="grid grid-cols-2 gap-4">
+
+            {/* Who */}
+            <SectionCard>
+              <SectionTitle>Who is this for?</SectionTitle>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label req>Customer name</Label>
+                  <AutocompleteInput value={form.customer} onChange={v => set("customer", v)}
+                    onSelect={handleCustomerSelect} options={customerOptions}
+                    placeholder="Jerry Kallman" error={errors.customer} />
+                  {errors.customer && <FieldError />}
+                </div>
+                <div>
+                  <Label req>Company</Label>
+                  <AutocompleteInput value={form.company} onChange={v => set("company", v)}
+                    onSelect={handleCompanySelect} options={companyOptions}
+                    placeholder="Airline International" error={errors.company} />
+                  {errors.company && <FieldError />}
+                </div>
               </div>
-              <div>
-                <Label req>Company</Label>
-                <AutocompleteInput value={form.company} onChange={v => set("company", v)}
-                  onSelect={handleCompanySelect} options={companyOptions}
-                  placeholder="Airline International" error={errors.company} />
-                {errors.company && <FieldError />}
+              {(form.customer && getCustomerProfile(form.customer)) && (
+                <div className="mt-3 flex items-center gap-1.5 text-xs text-indigo-600">
+                  <UserCheck size={12} />
+                  Existing customer — payment terms, company &amp; delivery pre-filled
+                </div>
+              )}
+            </SectionCard>
+
+            {/* Invoice details */}
+            <SectionCard>
+              <SectionTitle>Invoice details</SectionTitle>
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <Label req>Invoice #</Label>
+                  <input value={form.invoice} onChange={e => set("invoice", e.target.value)}
+                    placeholder="INV-001" className={inp(errCls("invoice"))} />
+                  {errors.invoice && <FieldError />}
+                </div>
+                <div>
+                  <Label req>Invoice date</Label>
+                  <input type="date" value={form.invoiceDate} onChange={e => set("invoiceDate", e.target.value)}
+                    className={inp(errCls("invoiceDate"))} />
+                  {errors.invoiceDate && <FieldError />}
+                </div>
+                <div>
+                  <Label>Order #</Label>
+                  <input value={form.orderNo} readOnly
+                    className="w-full px-3 py-2 bg-gray-50 border border-gray-100 rounded-lg text-sm font-mono text-indigo-700 font-semibold focus:outline-none cursor-default" />
+                  <p className="text-[11px] text-gray-400 mt-1">Auto-generated · unique per entry</p>
+                </div>
               </div>
-            </div>
-            {(form.customer && getCustomerProfile(form.customer)) && (
-              <div className="mt-2 flex items-center gap-1.5 text-xs text-indigo-600">
-                <UserCheck size={12} />
-                Existing customer — payment terms, company &amp; delivery pre-filled
-              </div>
-            )}
+            </SectionCard>
+
           </div>
-
-          <div className="border-t border-gray-100" />
-
-          {/* ── Invoice header ── */}
-          <div>
-            <Divider title="Invoice details" />
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <Label req>Invoice #</Label>
-                <input value={form.invoice} onChange={e => set("invoice", e.target.value)}
-                  placeholder="1020" className={inp(errCls("invoice"))} />
-                {errors.invoice && <FieldError />}
-              </div>
-              <div>
-                <Label req>Invoice date</Label>
-                <input type="date" value={form.invoiceDate} onChange={e => set("invoiceDate", e.target.value)}
-                  className={inp(errCls("invoiceDate"))} />
-                {errors.invoiceDate && <FieldError />}
-              </div>
-              <div>
-                <Label>Order #</Label>
-                <input value={form.orderNo} readOnly
-                  className="w-full px-3 py-2 bg-gray-50 border border-gray-100 rounded-lg text-sm font-mono text-indigo-700 font-semibold focus:outline-none cursor-default" />
-                <p className="text-[11px] text-gray-400 mt-1">Auto-generated · unique per entry</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="border-t border-gray-100" />
 
           {/* ── Line items ── */}
-          <div>
-            <Divider title="What are they buying?" />
+          <SectionCard>
+            <SectionTitle>What are they buying?</SectionTitle>
 
             {form.lineItems.map((item, idx) => {
               const lineTotal = (parseFloat(item.qty) || 0) * (parseFloat(item.unitPrice) || 0);
@@ -611,13 +603,11 @@ export default function AddB2B() {
                 </div>
               </div>
             )}
-          </div>
-
-          <div className="border-t border-gray-100" />
+          </SectionCard>
 
           {/* ── Payment ── */}
-          <div>
-            <Divider title="Payment details" />
+          <SectionCard>
+            <SectionTitle>Payment details</SectionTitle>
             <div className="grid grid-cols-3 gap-4 mb-4">
               <div>
                 <Label>Terms</Label>
@@ -653,44 +643,11 @@ export default function AddB2B() {
                 <input type="date" value={form.paymentRecDate} onChange={e => set("paymentRecDate", e.target.value)} className={inp()} />
               </div>
             </div>
-          </div>
-
-          <div className="border-t border-gray-100" />
-
-          {/* ── Fulfillment ── */}
-          <div>
-            <Divider title="Fulfillment" />
-            <div className="grid grid-cols-3 gap-4 mb-4">
-              <div>
-                <Label>Fulfilled month</Label>
-                <select value={form.fulfilledMonth} onChange={e => set("fulfilledMonth", e.target.value)} className={sel()}>
-                  {MONTHS.map(m => <option key={m} value={m}>{m || "Select…"}</option>)}
-                </select>
-              </div>
-              <div>
-                <Label>Shipment date</Label>
-                <input type="date" value={form.shipmentDate} onChange={e => set("shipmentDate", e.target.value)} className={inp()} />
-              </div>
-              <div>
-                <Label>Delivery</Label>
-                <select value={form.delivery} onChange={e => set("delivery", e.target.value)} className={sel()}>
-                  {DELIVERY.map(d => <option key={d}>{d}</option>)}
-                </select>
-              </div>
-            </div>
-            <div>
-              <Label>Payment rec. month</Label>
-              <select value={form.paymentRecMonth} onChange={e => set("paymentRecMonth", e.target.value)} className={sel()}>
-                {MONTHS.map(m => <option key={m} value={m}>{m || "Select…"}</option>)}
-              </select>
-            </div>
-          </div>
-
-          <div className="border-t border-gray-100" />
+          </SectionCard>
 
           {/* ── Notes ── */}
-          <div>
-            <Divider title="Notes" />
+          <SectionCard>
+            <SectionTitle>Notes</SectionTitle>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>Remarks</Label>
@@ -705,7 +662,7 @@ export default function AddB2B() {
                 <p className="text-[10px] text-gray-300 mt-1 text-right">{form.financeRemarks.length}/1000</p>
               </div>
             </div>
-          </div>
+          </SectionCard>
 
           {/* ── Save error banner ── */}
           {saveError && (
@@ -715,7 +672,7 @@ export default function AddB2B() {
           )}
 
           {/* ── Submit ── */}
-          <div className="flex items-center justify-between pt-2 pb-6">
+          <div className="flex items-center justify-between py-2 pb-8">
             <p className="text-xs text-gray-400"><span className="text-red-400">*</span> required fields</p>
             <div className="flex items-center gap-3">
               {mode === "edit" && (
@@ -725,97 +682,14 @@ export default function AddB2B() {
                 </button>
               )}
               <button type="submit" disabled={submitting}
-                className="px-5 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                className="px-6 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                 {submitting ? "Saving…" : mode === "edit" ? "Update entry" : "Add entry"}
               </button>
             </div>
           </div>
 
         </form>
-
-        {/* ── Live preview ── */}
-        <div className="w-64 shrink-0 sticky top-6">
-          <p className="text-[11px] text-gray-400 font-medium mb-3">Preview</p>
-          <div className={`bg-white border rounded-xl p-4 transition-all duration-300 ${hasPreview ? "border-gray-200 shadow-sm" : "border-dashed border-gray-200"}`}>
-            {hasPreview ? (
-              <div className="space-y-3">
-                <div>
-                  <p className="text-[13px] font-semibold text-gray-900 leading-tight">
-                    {form.company || <span className="text-gray-300">Company</span>}
-                  </p>
-                  <p className="text-xs text-gray-400 mt-0.5">
-                    {form.customer || <span className="text-gray-300">Customer name</span>}
-                  </p>
-                </div>
-
-                {form.orderNo && (
-                  <p className="font-mono text-[11px] text-indigo-500 font-semibold">{form.orderNo}</p>
-                )}
-
-                {(form.invoice || form.invoiceDate) && (
-                  <div className="flex items-center gap-2 text-xs text-gray-500">
-                    {form.invoice && <span className="font-mono font-semibold text-indigo-600">INV {form.invoice}</span>}
-                    {form.invoiceDate && <span className="text-gray-300">·</span>}
-                    {form.invoiceDate && <span>{new Date(form.invoiceDate + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>}
-                  </div>
-                )}
-
-                {/* Line items preview */}
-                {form.lineItems.some(li => li.product || li.productVariant) && (
-                  <div className="space-y-1.5">
-                    {form.lineItems.filter(li => li.product || li.productVariant).map((li, i) => (
-                      <div key={i} className="flex items-start justify-between gap-2">
-                        <div className="min-w-0">
-                          <p className="text-xs text-gray-700 font-medium truncate">{li.productVariant || li.product}</p>
-                          {li.sku && <p className="text-[10px] font-mono text-gray-400">{li.sku}</p>}
-                        </div>
-                        {li.qty && li.unitPrice && (
-                          <p className="text-xs text-gray-500 shrink-0">{li.qty}×</p>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {total > 0 && (
-                  <div className="pt-2 border-t border-gray-50">
-                    <p className="text-2xl font-bold text-gray-900 tracking-tight">{fmt(total, form.currency)}</p>
-                    {form.lineItems.length === 1 && form.lineItems[0].qty && form.lineItems[0].unitPrice && (
-                      <p className="text-xs text-gray-400 mt-0.5">
-                        {form.lineItems[0].qty} × {fmt(parseFloat(form.lineItems[0].unitPrice), form.currency)}
-                      </p>
-                    )}
-                    {form.lineItems.length > 1 && (
-                      <p className="text-xs text-gray-400 mt-0.5">{form.lineItems.length} line items</p>
-                    )}
-                  </div>
-                )}
-
-                <div className="flex flex-wrap items-center gap-2 pt-1">
-                  <StatusBadge status={form.status} />
-                  {form.paymentTerms && <span className="text-xs text-gray-400">{form.paymentTerms}</span>}
-                  {form.currency && form.currency !== "USD" && (
-                    <span className="text-[10px] font-semibold bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded">
-                      {form.currency}
-                    </span>
-                  )}
-                </div>
-
-                {form.dueDate && (
-                  <p className="text-xs text-gray-400">
-                    Due {new Date(form.dueDate + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-                  </p>
-                )}
-              </div>
-            ) : (
-              <p className="text-xs text-gray-300 text-center py-6 leading-relaxed">
-                Fill in the form and you'll see a preview here.
-              </p>
-            )}
-          </div>
-        </div>
-
       </div>
-    </div>
-  );
+    );
 }
+

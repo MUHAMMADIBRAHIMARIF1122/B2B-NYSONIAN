@@ -65,10 +65,52 @@ const pool = new Pool({
   connectionTimeoutMillis: 5000,
 });
 
-// ── Ensure currency column exists (safe migration on startup) ─────────────────
-pool.query("ALTER TABLE b2b.entries ADD COLUMN IF NOT EXISTS currency TEXT DEFAULT 'USD'")
-  .then(() => console.log("[DB] currency column ready"))
-  .catch(err => console.error("[DB] currency migration failed:", err.message));
+// ── Startup migrations ────────────────────────────────────────────────────────
+async function runMigrations() {
+  try {
+    await pool.query("ALTER TABLE b2b.entries ADD COLUMN IF NOT EXISTS currency TEXT DEFAULT 'USD'");
+    console.log("[DB] entries.currency column ready");
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS b2b.clients (
+        id             SERIAL PRIMARY KEY,
+        company        TEXT UNIQUE NOT NULL,
+        customer       TEXT,
+        payment_terms  TEXT,
+        delivery       TEXT DEFAULT 'Company',
+        currency       TEXT DEFAULT 'USD',
+        remarks        TEXT DEFAULT '',
+        created_at     TIMESTAMPTZ DEFAULT NOW(),
+        updated_at     TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+    console.log("[DB] clients table ready");
+
+    // Backfill clients from existing entries (safe — ON CONFLICT does nothing for already-inserted rows)
+    await pool.query(`
+      INSERT INTO b2b.clients (company, customer, payment_terms, delivery, currency, updated_at)
+      SELECT DISTINCT ON (company)
+        company,
+        customer,
+        COALESCE(payment_terms, ''),
+        COALESCE(delivery, 'Company'),
+        COALESCE(currency, 'USD'),
+        NOW()
+      FROM b2b.entries
+      WHERE company IS NOT NULL AND company <> ''
+      ORDER BY company, id DESC
+      ON CONFLICT (company) DO NOTHING
+    `);
+    console.log("[DB] clients backfill complete");
+
+    await pool.query("ALTER TABLE b2b.entries ADD COLUMN IF NOT EXISTS fulfillment_status TEXT DEFAULT ''");
+    await pool.query("ALTER TABLE b2b.entries ADD COLUMN IF NOT EXISTS fulfillment_ready_date DATE");
+    console.log("[DB] fulfillment columns ready");
+  } catch (err) {
+    console.error("[DB] Migration error:", err.message);
+  }
+}
+runMigrations();
 
 // ── Input validators ──────────────────────────────────────────────────────────
 const ALLOWED_STATUS        = ["Received", "Paid", "Partially Received", "Due", ""];
@@ -134,6 +176,114 @@ async function insertLineItem(header, item) {
   return result.rows[0];
 }
 
+// ── Upsert client master record ───────────────────────────────────────────────
+async function upsertClient(header) {
+  await pool.query(`
+    INSERT INTO b2b.clients (company, customer, payment_terms, delivery, currency, updated_at)
+    VALUES ($1, $2, $3, $4, $5, NOW())
+    ON CONFLICT (company) DO UPDATE SET
+      customer      = EXCLUDED.customer,
+      payment_terms = EXCLUDED.payment_terms,
+      delivery      = EXCLUDED.delivery,
+      currency      = EXCLUDED.currency,
+      updated_at    = NOW()
+  `, [
+    header.company.trim(),
+    header.customer.trim(),
+    header.paymentTerms || "",
+    header.delivery || "Company",
+    header.currency || "USD",
+  ]);
+}
+
+// ── GET /api/b2b-entries ──────────────────────────────────────────────────────
+app.get("/api/b2b-entries", requireApiKey, async (_req, res) => {
+  try {
+    const { rows } = await pool.query(`
+      SELECT id, customer, company, product, invoice, invoice_date, sku,
+             qty, unit_price, total, payment_terms, due_date, order_no,
+             status, payment_rec_date, shipment_date, fulfilled_month,
+             payment_rec_month, delivery, remarks, finance_remarks, closed_won,
+             currency, fulfillment_status, fulfillment_ready_date, created_at
+      FROM b2b.entries
+      ORDER BY created_at DESC
+    `);
+    res.json({ ok: true, entries: rows });
+  } catch (err) {
+    console.error("DB fetch entries error:", err.message);
+    res.status(500).json({ ok: false, error: "Failed to fetch entries." });
+  }
+});
+
+// ── GET /api/clients ──────────────────────────────────────────────────────────
+app.get("/api/clients", requireApiKey, async (_req, res) => {
+  try {
+    const { rows } = await pool.query(`
+      SELECT
+        c.company,
+        c.customer,
+        c.payment_terms,
+        c.delivery,
+        c.currency,
+        c.remarks,
+        c.created_at,
+        c.updated_at,
+        COUNT(e.id)::int                                                              AS invoice_count,
+        COALESCE(SUM(e.total), 0)::float                                              AS total_invoiced,
+        COALESCE(SUM(CASE WHEN e.status IN ('Paid','Received') THEN e.total ELSE 0 END), 0)::float AS total_received,
+        MAX(e.invoice_date)                                                           AS last_invoice_date,
+        MAX(e.payment_rec_date)                                                       AS last_payment_date
+      FROM b2b.clients c
+      LEFT JOIN b2b.entries e ON e.company = c.company
+      GROUP BY c.company, c.customer, c.payment_terms, c.delivery, c.currency,
+               c.remarks, c.created_at, c.updated_at
+      ORDER BY total_invoiced DESC
+    `);
+    res.json({ ok: true, clients: rows });
+  } catch (err) {
+    console.error("DB fetch clients error:", err.message);
+    res.status(500).json({ ok: false, error: "Failed to fetch clients." });
+  }
+});
+
+// ── PATCH /api/fulfillment/:orderNo ───────────────────────────────────────────
+app.patch("/api/fulfillment/:orderNo", requireApiKey, writeLimiter, async (req, res) => {
+  const { orderNo } = req.params;
+  const { fulfillmentStatus, fulfilledMonth, shipmentDate, delivery, readyDate } = req.body;
+
+  if (!orderNo) return res.status(400).json({ ok: false, error: "orderNo required" });
+  if (!["available", "unavailable", ""].includes(fulfillmentStatus ?? "")) {
+    return res.status(400).json({ ok: false, error: "invalid fulfillmentStatus" });
+  }
+  if (delivery !== undefined && !ALLOWED_DELIVERY.includes(delivery)) {
+    return res.status(400).json({ ok: false, error: "invalid delivery" });
+  }
+
+  try {
+    await pool.query(`
+      UPDATE b2b.entries
+      SET fulfillment_status     = $1,
+          fulfilled_month        = COALESCE(NULLIF($2, ''), fulfilled_month),
+          shipment_date          = COALESCE($3::date, shipment_date),
+          delivery               = COALESCE(NULLIF($4, ''), delivery),
+          fulfillment_ready_date = $5::date
+      WHERE order_no = $6
+    `, [
+      fulfillmentStatus ?? "",
+      fulfilledMonth    || "",
+      shipmentDate      || null,
+      delivery          || "",
+      readyDate         || null,
+      orderNo,
+    ]);
+    console.log(`[~] Fulfillment updated: order=${orderNo}, status=${fulfillmentStatus}`);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("Fulfillment update error:", err.message);
+    res.status(500).json({ ok: false, error: "Failed to update fulfillment." });
+  }
+});
+
 // ── POST /api/b2b-invoice ─────────────────────────────────────────────────────
 // Save all line items to DB and create one Xero DRAFT invoice.
 app.post("/api/b2b-invoice", requireApiKey, writeLimiter, async (req, res) => {
@@ -157,6 +307,7 @@ app.post("/api/b2b-invoice", requireApiKey, writeLimiter, async (req, res) => {
     for (const item of lineItems) {
       savedRows.push(await insertLineItem(header, item));
     }
+    await upsertClient(header);
   } catch (err) {
     console.error("DB insert error:", err.message);
     return res.status(500).json({ ok: false, error: "Failed to save entries. Please try again." });
@@ -208,6 +359,7 @@ app.patch("/api/b2b-order/:orderNo", requireApiKey, writeLimiter, async (req, re
     for (const item of lineItems) {
       savedRows.push(await insertLineItem(header, item));
     }
+    await upsertClient(header);
     console.log(`[~] Order updated: ${savedRows.length} line(s), order=${orderNo}`);
     res.json({ ok: true, ids: savedRows.map(r => r.id), orderNo });
   } catch (err) {
