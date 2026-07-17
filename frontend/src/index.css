@@ -5,9 +5,9 @@
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
-  background: #020617;
+  background: #f9fafb;
   -webkit-font-smoothing: antialiased;
-  color: #f1f5f9;
+  color: #111827;
 }
 
 #root { width: 100%; min-height: 100vh; }
@@ -15,8 +15,8 @@ body {
 /* ── Scrollbar ── */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 99px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.22); }
+::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.18); }
 
 /* ── Page transition ── */
 @keyframes pageFade {
@@ -37,20 +37,20 @@ body {
   transition: box-shadow 0.18s ease, border-color 0.18s ease;
 }
 .kpi-card:hover {
-  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-  border-color: #475569;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.07);
+  border-color: #d1d5db;
 }
 
 .client-card {
   transition: box-shadow 0.18s ease, border-color 0.18s ease;
 }
 .client-card:hover {
-  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-  border-color: #4f46e5;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.07);
+  border-color: #c7d2fe;
 }
 
 /* ── Table row hover ── */
 .tr-hover { transition: background 0.1s ease; }
-.tr-hover:hover { background: #334155 !important; }
+.tr-hover:hover { background: #f5f7ff !important; }
 
-select option { background: #1e293b; color: #f1f5f9; }
+select option { background: #fff; color: #111; }

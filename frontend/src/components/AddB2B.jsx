@@ -55,18 +55,18 @@ function AutocompleteInput({ value, onChange, onSelect, options, placeholder, er
         placeholder={placeholder}
         onChange={e => { onChange(e.target.value); setOpen(true); }}
         onFocus={() => setOpen(true)}
-        className={`w-full px-3 py-2 bg-slate-900 border rounded-lg text-sm text-slate-100 placeholder-slate-500
-          focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow pr-8
-          ${error ? "border-red-500 focus:ring-red-500 focus:border-red-500" : "border-slate-600"}`}
+        className={`w-full px-3 py-2 bg-white border rounded-lg text-sm text-gray-800 placeholder-gray-300
+          focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 transition-shadow pr-8
+          ${error ? "border-red-300 focus:ring-red-300 focus:border-red-300" : "border-gray-200"}`}
       />
-      <ChevronDown size={13} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
+      <ChevronDown size={13} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-300 pointer-events-none" />
       {open && filtered.length > 0 && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-slate-800 border border-slate-700 rounded-xl shadow-lg z-30 overflow-y-auto max-h-60">
+        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-30 overflow-y-auto max-h-60">
           {filtered.map(opt => (
             <button key={opt} type="button"
               onMouseDown={() => { onSelect(opt); setOpen(false); }}
-              className="w-full text-left px-3 py-2 text-sm text-slate-300 hover:bg-indigo-900/30 hover:text-indigo-300 flex items-center gap-2 transition-colors">
-              <Icon size={12} className="text-slate-500 shrink-0" />
+              className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 flex items-center gap-2 transition-colors">
+              <Icon size={12} className="text-gray-300 shrink-0" />
               {opt}
             </button>
           ))}
@@ -78,18 +78,18 @@ function AutocompleteInput({ value, onChange, onSelect, options, placeholder, er
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const fmt = (n, currency = "USD") => new Intl.NumberFormat("en-US", { style: "currency", currency }).format(n);
-const inp = (err = "") => `w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow ${err}`;
-const sel = () => `w-full px-3 py-2 bg-slate-900 border border-slate-600 rounded-lg text-sm text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500`;
+const inp = (err = "") => `w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 transition-shadow ${err}`;
+const sel = () => `w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400`;
 
 function Label({ children, req }) {
   return (
-    <label className="block text-[13px] text-slate-400 mb-1.5">
+    <label className="block text-[13px] text-gray-500 mb-1.5">
       {children}{req && <span className="text-red-400 ml-0.5">*</span>}
     </label>
   );
 }
 function Divider({ title }) {
-  return <p className="text-sm font-semibold text-slate-300 mb-4 pt-2">{title}</p>;
+  return <p className="text-sm font-semibold text-gray-700 mb-4 pt-2">{title}</p>;
 }
 function FieldError({ msg }) {
   return <p className="text-xs text-red-400 mt-1">{msg || "Required"}</p>;
@@ -110,10 +110,10 @@ const emptyForm = () => ({
 
 // ── Layout helpers (defined outside component to prevent remount on re-render) ─
 function SectionCard({ children }) {
-  return <div className="bg-slate-800 border border-slate-700 rounded-xl p-6">{children}</div>;
+  return <div className="bg-white border border-gray-200 rounded-xl p-6">{children}</div>;
 }
 function SectionTitle({ children }) {
-  return <p className="text-sm font-semibold text-slate-100 mb-5">{children}</p>;
+  return <p className="text-sm font-semibold text-gray-800 mb-5">{children}</p>;
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
@@ -413,7 +413,7 @@ export default function AddB2B() {
     setMode("success");
   }
 
-  const errCls = (k) => errors[k] ? "border-red-500 focus:ring-red-500 focus:border-red-500" : "";
+  const errCls = (k) => errors[k] ? "border-red-300 focus:ring-red-300 focus:border-red-300" : "";
 
   // ── Success screen ────────────────────────────────────────────────────────
   if (mode === "success") {
@@ -421,23 +421,23 @@ export default function AddB2B() {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center max-w-sm">
-          <div className="w-14 h-14 rounded-full bg-emerald-900/30 border border-emerald-700 flex items-center justify-center mx-auto mb-4">
-            <CheckCircle size={26} className="text-emerald-400" />
+          <div className="w-14 h-14 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center mx-auto mb-4">
+            <CheckCircle size={26} className="text-emerald-500" />
           </div>
-          <h2 className="text-base font-semibold text-slate-100 mb-1">Entry saved</h2>
-          <p className="text-sm text-slate-400 mb-1">
+          <h2 className="text-base font-semibold text-gray-900 mb-1">Entry saved</h2>
+          <p className="text-sm text-gray-400 mb-1">
             {itemCount} line item{itemCount !== 1 ? "s" : ""} · INV {savedEntry?.invoice}
           </p>
           {savedEntry?.xeroInvoiceId ? (
-            <p className="text-sm text-indigo-400 mb-1 font-medium">
+            <p className="text-sm text-indigo-500 mb-1 font-medium">
               Xero draft created · {savedEntry.xeroInvoiceId.slice(0, 8)}…
             </p>
           ) : (
-            <p className="text-sm text-slate-600 mb-1">Xero sync pending</p>
+            <p className="text-sm text-gray-300 mb-1">Xero sync pending</p>
           )}
-          <p className="text-sm text-slate-400 mb-6">Visible across Dashboard, Transactions, and Client Tracker.</p>
+          <p className="text-sm text-gray-400 mb-6">Visible across Dashboard, Transactions, and Client Tracker.</p>
           <button onClick={() => { setForm(emptyForm()); setErrors({}); setSavedEntry(null); setMode("add"); }}
-            className="px-6 py-2.5 bg-slate-700 text-slate-100 text-sm font-medium rounded-lg hover:bg-slate-600 transition-colors">
+            className="px-6 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-700 transition-colors">
             Done
           </button>
         </div>
@@ -450,8 +450,8 @@ export default function AddB2B() {
   return (
     <div className="max-w-screen-xl">
       <div className="mb-6">
-        <h1 className="text-xl font-semibold text-slate-100">{mode === "edit" ? "Edit Entry" : "New B2B Entry"}</h1>
-        <p className="text-sm text-slate-400 mt-0.5">
+        <h1 className="text-xl font-semibold text-gray-900">{mode === "edit" ? "Edit Entry" : "New B2B Entry"}</h1>
+        <p className="text-sm text-gray-400 mt-0.5">
           {mode === "edit"
             ? `Editing entry · Order ${savedEntry?.orderNo}`
             : "Adds to Transactions, Dashboard, and Client Tracker."}
@@ -483,7 +483,7 @@ export default function AddB2B() {
                 </div>
               </div>
               {(form.customer && getCustomerProfile(form.customer)) && (
-                <div className="mt-3 flex items-center gap-1.5 text-xs text-indigo-400">
+                <div className="mt-3 flex items-center gap-1.5 text-xs text-indigo-600">
                   <UserCheck size={12} />
                   Existing customer — payment terms, company &amp; delivery pre-filled
                 </div>
@@ -509,8 +509,8 @@ export default function AddB2B() {
                 <div>
                   <Label>Order #</Label>
                   <input value={form.orderNo} readOnly
-                    className="w-full px-3 py-2 bg-slate-900/50 border border-slate-700 rounded-lg text-sm font-mono text-indigo-400 font-semibold focus:outline-none cursor-default" />
-                  <p className="text-[11px] text-slate-500 mt-1">Auto-generated · unique per entry</p>
+                    className="w-full px-3 py-2 bg-gray-50 border border-gray-100 rounded-lg text-sm font-mono text-indigo-700 font-semibold focus:outline-none cursor-default" />
+                  <p className="text-[11px] text-gray-400 mt-1">Auto-generated · unique per entry</p>
                 </div>
               </div>
             </SectionCard>
@@ -524,15 +524,15 @@ export default function AddB2B() {
             {form.lineItems.map((item, idx) => {
               const lineTotal = (parseFloat(item.qty) || 0) * (parseFloat(item.unitPrice) || 0);
               return (
-                <div key={idx} className="mb-3 p-4 border border-slate-700 rounded-xl bg-slate-700/30 relative">
+                <div key={idx} className="mb-3 p-4 border border-gray-100 rounded-xl bg-gray-50/30 relative">
                   {form.lineItems.length > 1 && (
                     <button type="button" onClick={() => removeLineItem(idx)}
-                      className="absolute top-3 right-3 text-slate-600 hover:text-red-400 transition-colors">
+                      className="absolute top-3 right-3 text-gray-300 hover:text-red-400 transition-colors">
                       <X size={14} />
                     </button>
                   )}
                   {form.lineItems.length > 1 && (
-                    <p className="text-[11px] font-semibold text-slate-500 mb-3">Line item {idx + 1}</p>
+                    <p className="text-[11px] font-semibold text-gray-400 mb-3">Line item {idx + 1}</p>
                   )}
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
@@ -546,7 +546,7 @@ export default function AddB2B() {
                         placeholder="Carry-On: All-in-One — Forest Green"
                         icon={Package}
                       />
-                      {item.product && <p className="text-[11px] text-slate-500 mt-1 truncate">{item.product}</p>}
+                      {item.product && <p className="text-[11px] text-gray-400 mt-1 truncate">{item.product}</p>}
                     </div>
                     <div>
                       <Label>SKU</Label>
@@ -559,7 +559,7 @@ export default function AddB2B() {
                         icon={Package}
                       />
                       {item.sku && colorForSku(item.sku) && (
-                        <p className="text-[11px] text-indigo-400 mt-1 font-medium">
+                        <p className="text-[11px] text-indigo-500 mt-1 font-medium">
                           {colorForSku(item.sku)} · auto-filled from SKU
                         </p>
                       )}
@@ -572,7 +572,7 @@ export default function AddB2B() {
                       <input type="number" min="1" step="1" value={item.qty}
                         onChange={e => updateLineItem(idx, "qty", e.target.value)}
                         placeholder="0"
-                        className={inp(errors[`li_${idx}_qty`] ? "border-red-500 focus:ring-red-500 focus:border-red-500" : "")} />
+                        className={inp(errors[`li_${idx}_qty`] ? "border-red-300 focus:ring-red-300 focus:border-red-300" : "")} />
                       {errors[`li_${idx}_qty`] && <FieldError msg="Whole number required" />}
                     </div>
                     <div>
@@ -583,10 +583,10 @@ export default function AddB2B() {
                     </div>
                     <div>
                       <Label>Line total</Label>
-                      <div className="w-full px-3 py-2 bg-slate-900/50 border border-slate-700 rounded-lg text-sm font-semibold text-slate-300 h-[38px] flex items-center">
+                      <div className="w-full px-3 py-2 bg-white border border-gray-100 rounded-lg text-sm font-semibold text-gray-700 h-[38px] flex items-center">
                         {lineTotal > 0
                           ? fmt(lineTotal, form.currency)
-                          : <span className="text-slate-600 font-normal text-xs">auto-calculated</span>}
+                          : <span className="text-gray-300 font-normal text-xs">auto-calculated</span>}
                       </div>
                     </div>
                   </div>
@@ -595,7 +595,7 @@ export default function AddB2B() {
             })}
 
             <button type="button" onClick={addLineItem}
-              className="w-full py-2.5 border border-dashed border-indigo-700 rounded-xl text-sm text-indigo-400 hover:bg-indigo-900/30 transition-colors flex items-center justify-center gap-2">
+              className="w-full py-2.5 border border-dashed border-indigo-200 rounded-xl text-sm text-indigo-500 hover:bg-indigo-50 transition-colors flex items-center justify-center gap-2">
               <PlusCircle size={14} />
               Add line item
             </button>
@@ -603,8 +603,8 @@ export default function AddB2B() {
             {form.lineItems.length > 1 && total > 0 && (
               <div className="flex justify-end mt-3 pr-1">
                 <div className="text-right">
-                  <p className="text-xs text-slate-400 mb-0.5">Invoice total ({form.lineItems.length} items)</p>
-                  <p className="text-2xl font-bold text-slate-100">{fmt(total, form.currency)}</p>
+                  <p className="text-xs text-gray-400 mb-0.5">Invoice total ({form.lineItems.length} items)</p>
+                  <p className="text-2xl font-bold text-gray-900">{fmt(total, form.currency)}</p>
                 </div>
               </div>
             )}
@@ -632,7 +632,7 @@ export default function AddB2B() {
                 <select value={form.currency} onChange={e => set("currency", e.target.value)} className={sel()}>
                   {CURRENCIES.map(c => <option key={c}>{c}</option>)}
                 </select>
-                <p className="text-[11px] text-slate-500 mt-1">Passed to Xero on sync</p>
+                <p className="text-[11px] text-gray-400 mt-1">Passed to Xero on sync</p>
               </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -658,31 +658,31 @@ export default function AddB2B() {
                 <Label>Remarks</Label>
                 <textarea value={form.remarks} onChange={e => set("remarks", e.target.value)}
                   placeholder="Anything worth noting…" rows={3} maxLength={1000} className={`${inp()} resize-none`} />
-                <p className="text-[10px] text-slate-600 mt-1 text-right">{form.remarks.length}/1000</p>
+                <p className="text-[10px] text-gray-300 mt-1 text-right">{form.remarks.length}/1000</p>
               </div>
               <div>
                 <Label>Finance remarks</Label>
                 <textarea value={form.financeRemarks} onChange={e => set("financeRemarks", e.target.value)}
                   placeholder="e.g. bad debt, June-2026…" rows={3} maxLength={1000} className={`${inp()} resize-none`} />
-                <p className="text-[10px] text-slate-600 mt-1 text-right">{form.financeRemarks.length}/1000</p>
+                <p className="text-[10px] text-gray-300 mt-1 text-right">{form.financeRemarks.length}/1000</p>
               </div>
             </div>
           </SectionCard>
 
           {/* ── Save error banner ── */}
           {saveError && (
-            <div className="rounded-lg border border-red-700 bg-red-900/30 px-4 py-3 text-sm text-red-400">
+            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
               {saveError}
             </div>
           )}
 
           {/* ── Submit ── */}
           <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3 py-2 pb-8">
-            <p className="text-xs text-slate-500"><span className="text-red-400">*</span> required fields</p>
+            <p className="text-xs text-gray-400"><span className="text-red-400">*</span> required fields</p>
             <div className="flex items-center gap-3">
               {mode === "edit" && (
                 <button type="button" onClick={() => setMode("success")}
-                  className="px-4 py-2.5 border border-slate-600 text-sm font-medium text-slate-400 rounded-lg hover:bg-slate-700 transition-colors">
+                  className="px-4 py-2.5 border border-gray-200 text-sm font-medium text-gray-600 rounded-lg hover:bg-gray-50 transition-colors">
                   Cancel
                 </button>
               )}
@@ -697,3 +697,4 @@ export default function AddB2B() {
       </div>
     );
 }
+

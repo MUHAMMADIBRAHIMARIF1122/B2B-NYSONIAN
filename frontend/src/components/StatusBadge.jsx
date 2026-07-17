@@ -1,12 +1,12 @@
 export default function StatusBadge({ status }) {
   const styles = {
-    "Received":           "bg-emerald-900/40 text-emerald-300 border border-emerald-700",
-    "Paid":               "bg-blue-900/40 text-blue-300 border border-blue-700",
-    "Partially Received": "bg-amber-900/40 text-amber-300 border border-amber-700",
-    "Due":                "bg-orange-900/40 text-orange-300 border border-orange-700",
-    "Bad Debt":           "bg-red-900/40 text-red-300 border border-red-700",
+    "Received":           "bg-green-50 text-green-700 border border-green-200",
+    "Paid":               "bg-blue-50 text-blue-700 border border-blue-200",
+    "Partially Received": "bg-yellow-50 text-yellow-700 border border-yellow-200",
+    "Due":                "bg-orange-50 text-orange-700 border border-orange-200",
+    "Bad Debt":           "bg-red-50 text-red-700 border border-red-200",
   };
-  const cls = styles[status] || "bg-slate-700/40 text-slate-400 border border-slate-600";
+  const cls = styles[status] || "bg-gray-100 text-gray-600 border border-gray-200";
   return (
     <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium ${cls}`}>
       {status}
