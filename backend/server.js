@@ -26,7 +26,7 @@ app.use(cors({
     if (!origin || ALLOWED_ORIGINS.includes(origin)) return cb(null, true);
     cb(new Error(`CORS: origin ${origin} not allowed`));
   },
-  methods: ["GET", "POST", "PATCH"],
+  methods: ["GET", "POST", "PATCH", "DELETE"],
   allowedHeaders: ["Content-Type", "x-api-key"],
 }));
 
@@ -215,6 +215,30 @@ app.get("/api/b2b-entries", requireApiKey, async (_req, res) => {
   }
 });
 
+// ── DELETE /api/b2b-entries ───────────────────────────────────────────────────
+// Body: { ids: [1, 2, 3] }  — permanently deletes entries by primary key
+app.delete("/api/b2b-entries", requireApiKey, writeLimiter, async (req, res) => {
+  const { ids } = req.body;
+  if (!Array.isArray(ids) || ids.length === 0) {
+    return res.status(400).json({ ok: false, error: "ids[] required" });
+  }
+  const safe = ids.map(Number).filter(n => Number.isInteger(n) && n > 0);
+  if (safe.length === 0) {
+    return res.status(400).json({ ok: false, error: "No valid ids provided" });
+  }
+  try {
+    const placeholders = safe.map((_, i) => `$${i + 1}`).join(", ");
+    const { rowCount } = await pool.query(
+      `DELETE FROM b2b.entries WHERE id IN (${placeholders})`, safe
+    );
+    console.log(`[-] Deleted ${rowCount} entr${rowCount === 1 ? "y" : "ies"}`);
+    res.json({ ok: true, deleted: rowCount });
+  } catch (err) {
+    console.error("DB delete error:", err.message);
+    res.status(500).json({ ok: false, error: "Failed to delete entries." });
+  }
+});
+
 // ── GET /api/clients ──────────────────────────────────────────────────────────
 app.get("/api/clients", requireApiKey, async (_req, res) => {
   try {
@@ -267,7 +291,7 @@ app.patch("/api/fulfillment/:orderNo", requireApiKey, writeLimiter, async (req, 
           shipment_date          = COALESCE($3::date, shipment_date),
           delivery               = COALESCE(NULLIF($4, ''), delivery),
           fulfillment_ready_date = $5::date
-      WHERE order_no = $6
+      WHERE COALESCE(NULLIF(order_no, ''), invoice) = $6
     `, [
       fulfillmentStatus ?? "",
       fulfilledMonth    || "",

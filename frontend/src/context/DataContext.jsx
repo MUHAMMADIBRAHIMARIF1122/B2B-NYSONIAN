@@ -45,12 +45,15 @@ export function DataProvider({ children }) {
   const [dbTx,               setDbTx]               = useState([]);
   const [fulfillmentOverrides, setFulfillmentOverrides] = useState({});
   const [inventory,          setInventory]          = useState(initialInventory);
+  const [loading,            setLoading]            = useState(true);
 
   function fetchEntries() {
+    setLoading(true);
     fetch("/api/b2b-entries", { headers: { "x-api-key": API_KEY } })
       .then(r => r.json())
       .then(data => { if (data.ok) setDbTx(data.entries.map(mapRow)); })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }
 
   useEffect(() => { fetchEntries(); }, []);
@@ -97,8 +100,18 @@ export function DataProvider({ children }) {
   function addTransaction() { /* no-op — DB is source of truth; call refreshEntries() after POST */ }
 
   function removeTransactions(ids) {
+    // Optimistic update — remove from UI immediately
     const set = new Set(ids);
     setDbTx(prev => prev.filter(t => !set.has(t.id)));
+    // Persist to DB — only delete DB rows (static rows have no server record)
+    const dbIds = ids.filter(id => dbTx.some(t => t.id === id));
+    if (dbIds.length > 0) {
+      fetch("/api/b2b-entries", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json", "x-api-key": API_KEY },
+        body: JSON.stringify({ ids: dbIds }),
+      }).catch(() => {});
+    }
   }
 
   function updateTransaction(id, changes) {
@@ -130,7 +143,7 @@ export function DataProvider({ children }) {
 
   return (
     <DataContext.Provider value={{
-      transactions, monthlyRevenue,
+      transactions, monthlyRevenue, loading,
       addTransaction, refreshEntries, removeTransactions, updateTransaction,
       approveTransaction, holdTransaction, setFulfillmentStatus,
       inventory, updateInventoryItem, addInventoryItem,

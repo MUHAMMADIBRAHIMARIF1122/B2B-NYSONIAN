@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useData } from "./context/DataContext";
 import Dashboard from "./components/Dashboard";
 import TransactionsTable from "./components/TransactionsTable";
 import RevenueChart from "./components/RevenueChart";
@@ -22,6 +23,7 @@ const TABS = [
 ];
 
 export default function App() {
+  const { loading } = useData();
   const [activeTab,   setActiveTab]   = useState(() => localStorage.getItem("activeTab") || "dashboard");
   const [pageKey,     setPageKey]     = useState(0);
   // Default: open on desktop, closed on mobile
@@ -133,6 +135,12 @@ export default function App() {
             <span className="text-gray-800 font-medium truncate">{active?.label}</span>
           </div>
         </header>
+
+        {loading && (
+          <div className="h-0.5 w-full bg-gray-100 overflow-hidden shrink-0">
+            <div className="h-full bg-indigo-400 animate-pulse w-full" />
+          </div>
+        )}
 
         <main key={pageKey} className="flex-1 overflow-auto p-4 sm:p-6 page-enter">
           {activeTab === "dashboard"    && <Dashboard />}
