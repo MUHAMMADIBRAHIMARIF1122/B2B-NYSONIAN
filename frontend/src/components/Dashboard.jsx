@@ -138,9 +138,15 @@ export default function Dashboard() {
     ? invoiceTotals.reduce((s, v) => s + v, 0) / invoiceTotals.length
     : 0;
 
+  const today = new Date(); today.setHours(0, 0, 0, 0);
   const atRiskCompanies = [...new Set(
     transactions
-      .filter(t => t.status === "Due" || t.status === "Partially Received")
+      .filter(t => {
+        if (t.status !== "Due" && t.status !== "Partially Received") return false;
+        if (!t.dueDate) return false;
+        const due = new Date(t.dueDate); due.setHours(0, 0, 0, 0);
+        return due < today; // only flag if due date has already passed
+      })
       .map(t => t.company)
   )];
 
@@ -233,7 +239,7 @@ export default function Dashboard() {
           <p className={`text-[2rem] font-bold leading-none ${atRiskCompanies.length > 0 ? "text-orange-600" : "text-gray-800"}`}>
             {atRiskCompanies.length}
           </p>
-          <p className="text-xs text-gray-400 mt-2">Due or Partially Received</p>
+          <p className="text-xs text-gray-400 mt-2">Payment due date exceeded</p>
           {atRiskCompanies.length > 0 && (
             <p className="text-[11px] text-orange-500 mt-2 leading-snug break-words">{atRiskCompanies.join(" · ")}</p>
           )}
