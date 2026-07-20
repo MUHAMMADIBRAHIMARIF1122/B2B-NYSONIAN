@@ -100,6 +100,7 @@ async function runMigrations() {
     `);
     await pool.query("ALTER TABLE b2b.entries ADD COLUMN IF NOT EXISTS fulfillment_status TEXT DEFAULT ''");
     await pool.query("ALTER TABLE b2b.entries ADD COLUMN IF NOT EXISTS fulfillment_ready_date DATE");
+    await pool.query("ALTER TABLE b2b.entries ADD COLUMN IF NOT EXISTS customer_po TEXT DEFAULT ''");
 
     // Dedicated fulfillment table — works for BOTH static and DB orders
     await pool.query(`
@@ -165,9 +166,9 @@ async function insertLineItem(header, item) {
       customer, company, product, invoice, invoice_date, sku,
       qty, unit_price, total, payment_terms, due_date, order_no,
       status, payment_rec_date, shipment_date, fulfilled_month,
-      payment_rec_month, delivery, remarks, finance_remarks, closed_won, currency
+      payment_rec_month, delivery, remarks, finance_remarks, closed_won, currency, customer_po
     ) VALUES (
-      $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22
+      $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22,$23
     ) RETURNING id, order_no, created_at`,
     [
       header.customer.trim(), header.company.trim(), (item.product || "").trim(),
@@ -180,6 +181,7 @@ async function insertLineItem(header, item) {
       (header.remarks || "").trim(), (header.financeRemarks || "").trim(),
       (header.closedWon || "").trim(),
       header.currency || "USD",
+      (header.customerPO || "").trim(),
     ]
   );
   return result.rows[0];
@@ -210,7 +212,7 @@ app.get("/api/b2b-entries", requireApiKey, async (_req, res) => {
              qty, unit_price, total, payment_terms, due_date, order_no,
              status, payment_rec_date, shipment_date, fulfilled_month,
              payment_rec_month, delivery, remarks, finance_remarks, closed_won,
-             currency, fulfillment_status, fulfillment_ready_date, created_at
+             currency, fulfillment_status, fulfillment_ready_date, customer_po, created_at
       FROM b2b.entries
       ORDER BY created_at DESC
     `);

@@ -101,7 +101,7 @@ const emptyLineItem = () => ({ productVariant: "", product: "", sku: "", qty: ""
 const emptyForm = () => ({
   customer: "", company: "",
   lineItems: [emptyLineItem()],
-  invoice: "", invoiceDate: "",
+  invoice: "", invoiceDate: "", customerPO: "",
   currency: "USD",
   paymentTerms: "", dueDate: "", orderNo: generateOrderNo(),
   status: "", paymentRecDate: "",
@@ -278,6 +278,7 @@ export default function AddB2B() {
       company:         form.company.trim(),
       invoice:         form.invoice.trim(),
       invoiceDate:     form.invoiceDate,
+      customerPO:      form.customerPO?.trim() || "",
       currency:        form.currency || "USD",
       paymentTerms:    form.paymentTerms || "Net 40",
       dueDate:         form.dueDate,
@@ -338,6 +339,7 @@ export default function AddB2B() {
       lineItems:       f.lineItems       || [emptyLineItem()],
       invoice:         f.invoice         || "",
       invoiceDate:     f.invoiceDate     || "",
+      customerPO:      f.customerPO      || "",
       currency:        f.currency        || "USD",
       paymentTerms:    f.paymentTerms    || "",
       dueDate:         f.dueDate         || "",
@@ -365,6 +367,7 @@ export default function AddB2B() {
       company:         form.company.trim(),
       invoice:         form.invoice.trim(),
       invoiceDate:     form.invoiceDate,
+      customerPO:      form.customerPO?.trim() || "",
       currency:        form.currency || "USD",
       paymentTerms:    form.paymentTerms || "Net 40",
       dueDate:         form.dueDate,
@@ -493,7 +496,7 @@ export default function AddB2B() {
             {/* Invoice details */}
             <SectionCard>
               <SectionTitle>Invoice details</SectionTitle>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                 <div>
                   <Label req>Invoice #</Label>
                   <input value={form.invoice} onChange={e => set("invoice", e.target.value)}
@@ -505,6 +508,14 @@ export default function AddB2B() {
                   <input type="date" value={form.invoiceDate} onChange={e => set("invoiceDate", e.target.value)}
                     className={inp(errCls("invoiceDate"))} />
                   {errors.invoiceDate && <FieldError />}
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <Label>Customer PO #</Label>
+                  <input value={form.customerPO} onChange={e => set("customerPO", e.target.value)}
+                    placeholder="PO-12345" className={inp()} />
+                  <p className="text-[11px] text-gray-400 mt-1">Customer's purchase order number</p>
                 </div>
                 <div>
                   <Label>Order #</Label>

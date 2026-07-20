@@ -32,6 +32,7 @@ function mapRow(r) {
     currency:        r.currency       || "USD",
     fulfillment:          r.fulfillment_status     || "",
     fulfillmentReadyDate: r.fulfillment_ready_date || null,
+    customerPO:           r.customer_po            || "",
   };
 }
 
