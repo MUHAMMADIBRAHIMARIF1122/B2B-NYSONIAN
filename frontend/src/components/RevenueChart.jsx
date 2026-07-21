@@ -83,8 +83,8 @@ export default function RevenueChart() {
 
       {/* Chart */}
       <div className="bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-        <div className="overflow-x-auto">
-          <div style={{ minWidth: 700 }}>
+        <div className="overflow-x-auto -mx-2 px-2">
+          <div style={{ minWidth: "min(700px, 100%)", width: "100%" }}>
             <ResponsiveContainer width="100%" height={360}>
               {chartType === "bar" ? (
                 <BarChart data={monthlyRevenue} margin={{ top: 8, right: 24, left: 0, bottom: 4 }} barCategoryGap="28%">

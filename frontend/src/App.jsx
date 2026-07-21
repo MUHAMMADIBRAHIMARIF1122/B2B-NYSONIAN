@@ -74,7 +74,7 @@ export default function App() {
             </div>
             <button
               onClick={() => setSidebarOpen(false)}
-              className="p-1 rounded-md text-gray-300 hover:text-gray-500 hover:bg-gray-100 transition-colors"
+              className="p-2 rounded-md text-gray-300 hover:text-gray-500 hover:bg-gray-100 transition-colors"
             >
               <PanelLeftClose size={14} />
             </button>
@@ -124,9 +124,9 @@ export default function App() {
           {(!sidebarOpen) && (
             <button
               onClick={() => setSidebarOpen(true)}
-              className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors shrink-0"
+              className="p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors shrink-0"
             >
-              <Menu size={15} />
+              <Menu size={16} />
             </button>
           )}
           <div className="flex items-center gap-1.5 text-[13px] min-w-0">

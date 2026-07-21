@@ -23,8 +23,8 @@ const MONTHS        = [
   "August-2026", "September-2026", "October-2026",
 ];
 
-const ei = "w-full min-w-[70px] bg-transparent border-b border-indigo-200 focus:border-indigo-500 outline-none text-sm py-0.5 placeholder-gray-300";
-const es = "w-full min-w-[80px] bg-transparent border-b border-indigo-200 focus:border-indigo-500 outline-none text-sm py-0.5 cursor-pointer";
+const ei = "w-full min-w-[70px] bg-transparent border-b border-indigo-200 focus:border-indigo-500 outline-none text-sm py-1.5 placeholder-gray-300";
+const es = "w-full min-w-[80px] bg-transparent border-b border-indigo-200 focus:border-indigo-500 outline-none text-sm py-1.5 cursor-pointer";
 
 function EditInput({ val, onChange, type = "text", min }) {
   return <input type={type} value={val ?? ""} onChange={e => onChange(e.target.value)} min={min} className={ei} />;
@@ -264,17 +264,17 @@ export default function TransactionsTable() {
         </div>
       )}
 
-      {/* Table */}
+      {/* Table — horizontal scroll on mobile */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         <div className="overflow-auto max-h-[calc(100vh-220px)]">
-          <table className="min-w-full divide-y divide-gray-100">
+          <table className="min-w-[900px] w-full divide-y divide-gray-100">
             <thead className="bg-gray-50 sticky top-0 z-10 shadow-[0_1px_0_0_#e5e7eb]">
               <tr>
                 <th className="pl-4 pr-2 py-3 w-8">
                   <input type="checkbox" checked={allChecked}
                     ref={el => { if (el) el.indeterminate = someChecked && !allChecked; }}
                     onChange={toggleAll}
-                    className="w-3.5 h-3.5 rounded border-gray-300 accent-indigo-600 cursor-pointer" />
+                    className="w-4 h-4 rounded border-gray-300 accent-indigo-600 cursor-pointer" />
                 </th>
                 <Th col="customer"       label="Customer" />
                 <Th col="company"        label="Company" />
@@ -342,7 +342,7 @@ export default function TransactionsTable() {
                     className={`tr-hover ${isSelected ? "bg-indigo-50/60" : i % 2 === 0 ? "bg-white" : "bg-gray-50/50"} ${editingId ? "opacity-40 pointer-events-none" : ""}`}>
                     <td className="pl-4 pr-2 py-2.5">
                       <input type="checkbox" checked={isSelected} onChange={() => toggleRow(row.id)}
-                        className="w-3.5 h-3.5 rounded border-gray-300 accent-indigo-600 cursor-pointer" />
+                        className="w-4 h-4 rounded border-gray-300 accent-indigo-600 cursor-pointer" />
                     </td>
                     <td className="px-3 py-2.5 text-sm font-medium text-gray-900 whitespace-nowrap">{row.customer}</td>
                     <td className="px-3 py-2.5 text-sm text-gray-600 whitespace-nowrap">{row.company}</td>

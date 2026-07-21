@@ -78,8 +78,8 @@ function AutocompleteInput({ value, onChange, onSelect, options, placeholder, er
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const fmt = (n, currency = "USD") => new Intl.NumberFormat("en-US", { style: "currency", currency }).format(n);
-const inp = (err = "") => `w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 transition-shadow ${err}`;
-const sel = () => `w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400`;
+const inp = (err = "") => `w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-800 placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 transition-shadow ${err}`;
+const sel = () => `w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400`;
 
 function Label({ children, req }) {
   return (

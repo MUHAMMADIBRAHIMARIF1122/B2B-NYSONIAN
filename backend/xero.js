@@ -98,7 +98,7 @@ async function getAccessToken() {
       }
     } catch (err) {
       console.warn("[Xero] Could not auto-update XERO_REFRESH_TOKEN in .env:", err.message);
-      console.warn("[Xero] New refresh token:", refreshToken);
+      console.warn("[Xero] IMPORTANT: manually update XERO_REFRESH_TOKEN in backend/.env");
     }
   }
 

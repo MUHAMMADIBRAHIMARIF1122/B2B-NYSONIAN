@@ -372,7 +372,7 @@ export default function Fulfillment() {
                         <FieldInput label="Fulfilled month" required>
                           <select value={formData.fulfilledMonth}
                             onChange={e => setFormData(f => ({ ...f, fulfilledMonth: e.target.value }))}
-                            className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-400 appearance-none">
+                            className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-400 appearance-none">
                             <option value="">Select…</option>
                             {MONTHS.map(m => <option key={m} value={m}>{m}</option>)}
                           </select>
@@ -380,12 +380,12 @@ export default function Fulfillment() {
                         <FieldInput label="Shipment date" required>
                           <input type="date" value={formData.shipmentDate}
                             onChange={e => setFormData(f => ({ ...f, shipmentDate: e.target.value }))}
-                            className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-400" />
+                            className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-400" />
                         </FieldInput>
                         <FieldInput label="Delivery method">
                           <select value={formData.delivery}
                             onChange={e => setFormData(f => ({ ...f, delivery: e.target.value }))}
-                            className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-400 appearance-none">
+                            className="w-full px-3 py-2.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-emerald-400 appearance-none">
                             {DELIVERY.map(d => <option key={d}>{d}</option>)}
                           </select>
                         </FieldInput>

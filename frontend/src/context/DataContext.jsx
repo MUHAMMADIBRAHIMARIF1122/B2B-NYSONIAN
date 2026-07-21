@@ -8,6 +8,8 @@ const DataContext = createContext(null);
 function mapRow(r) {
   return {
     id:              r.id,
+    orderId:         r.order_id   || null,
+    clientId:        r.client_id  || null,
     customer:        r.customer       || "",
     company:         r.company        || "",
     product:         r.product        || "",
