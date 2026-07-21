@@ -1,7 +1,7 @@
 # B2B Finance — Project Documentation
 
 > Last updated: July 2026  
-> Stack: React 19 + Vite + Tailwind CSS v4 | Express 5 + PostgreSQL | Deployed on Vercel (frontend)
+> Stack: React 19 + Vite + Tailwind CSS v4 | Express 5 + PostgreSQL | Self-hosted on EC2 at b2b.nysonik.com
 
 ---
 
@@ -48,29 +48,28 @@ Internal B2B finance dashboard for **Nysonian Inc.** built to manage order-to-ca
 
 ## 2. Architecture
 
+### Production (b2b.nysonik.com)
+
 ```
-┌─────────────────────────────────┐     ┌──────────────────────────┐
-│  React Frontend (Vite)          │     │  Express API Server       │
-│  localhost:5173                 │────▶│  localhost:3001           │
-│                                 │     │                           │
-│  /frontend/src/                 │     │  server.js                │
-│    App.jsx          (shell)     │     │  POST /api/b2b-entries    │
-│    context/DataContext.jsx      │     │  GET  /api/health         │
-│    components/*.jsx             │     └────────────┬─────────────┘
-│    data/products.js             │                  │
-│    data/transactions.js         │                  ▼
-│    data/inventory.js            │     ┌──────────────────────────┐
-└─────────────────────────────────┘     │  PostgreSQL               │
-                                        │  54.172.115.118:5432      │
-                                        │  db: erp_maindb           │
-                                        │  schema: b2b              │
-                                        │  table:  b2b.entries      │
-                                        └──────────────────────────┘
+Browser → Nginx (443 HTTPS)
+              ├── /api/*  → Node.js :5009  (Express backend — PM2 process b2b-api)
+              └── /*      → /var/www/b2b/dist  (built React SPA)
+                                        │
+                                        ▼
+                               PostgreSQL on AWS RDS
+                               schema: b2b
+                               tables: entries, fulfillment, clients
 ```
 
-- **Frontend** talks to the API via Vite proxy (`/api` → `localhost:3001`)
-- **DataContext** holds all in-memory state; new entries are written to both DB (via API) and context
-- **products.js** is a static catalog file — no DB reads required for SKU lookups
+### Local development
+
+```
+React :5173  →  Vite proxy /api/*  →  Express :3001  →  PostgreSQL RDS
+```
+
+- **DataContext** fetches both `/api/b2b-entries` and `/api/fulfillment` on load, merges into `transactions`
+- **fulfillmentMap** keyed by `orderNo || invoice` — overlaid onto transactions for display
+- **products.js** is static — no DB reads for SKU lookups
 
 ---
 
@@ -78,24 +77,36 @@ Internal B2B finance dashboard for **Nysonian Inc.** built to manage order-to-ca
 
 ```
 F:\B2B FINANCE\
-├── server.js                  ← Express API server
-├── .env                       ← DATABASE_URL (not committed)
-├── vercel.json                ← Vercel deployment config
-├── start.bat                  ← One-click local startup script
-├── package.json               ← Backend dependencies
-├── DOCS.md                    ← This file
+├── backend/
+│   ├── app.js             ← Express app (all routes, DB pool, migrations)
+│   ├── server.js          ← Local dev entry (calls app.listen on :3001)
+│   ├── xero.js            ← Xero OAuth service
+│   └── .env               ← Secrets (never commit)
+├── api/
+│   └── index.js           ← Vercel serverless entry point
+├── deploy/
+│   ├── nginx.conf         ← Nginx site config for b2b.nysonik.com
+│   └── setup.sh           ← One-shot server setup script
+├── ecosystem.config.js    ← PM2 process config
+├── vercel.json            ← Vercel deployment config (backup)
+├── package.json           ← Root deps (express, pg, cors, etc.)
+├── start.bat              ← One-click local startup
+├── DOCS.md                ← This file
 │
 ├── frontend/
 │   ├── package.json
-│   ├── vite.config.js         ← Vite config with proxy + Tailwind plugin
+│   ├── vite.config.js     ← Vite config with /api proxy + Tailwind plugin
 │   ├── index.html
 │   └── src/
-│       ├── App.jsx            ← Root component, tab navigation, sidebar
-│       ├── index.css          ← Global styles + Tailwind directives
-│       ├── main.jsx           ← React DOM mount
+│       ├── App.jsx        ← Root component, tab navigation, sidebar
+│       ├── index.css      ← Global styles + Tailwind directives
+│       ├── main.jsx       ← React DOM mount
 │       │
 │       ├── context/
-│       │   └── DataContext.jsx ← All shared state + actions
+│       │   └── DataContext.jsx ← All shared state + API fetching
+│       │
+│       ├── hooks/
+│       │   └── useCountUp.js   ← Animated number counter hook
 │       │
 │       ├── components/
 │       │   ├── Dashboard.jsx
@@ -108,8 +119,8 @@ F:\B2B FINANCE\
 │       │   └── StatusBadge.jsx
 │       │
 │       └── data/
-│           ├── products.js    ← Full product+SKU+color+inventory catalog
-│           ├── transactions.js ← Seed/initial transaction data
+│           ├── products.js     ← Full product+SKU+color+inventory catalog (398 SKUs)
+│           ├── transactions.js ← Static seed data
 │           └── inventory.js   ← Initial inventory levels
 │
 └── scripts/
@@ -144,16 +155,21 @@ npm run dev
 
 ## 5. Environment Variables
 
-File: `F:\B2B FINANCE\.env` — **not committed to git**
-
-```
-DATABASE_URL="postgresql://nysonian:NysonianERP@54.172.115.118:5432/erp_maindb"
-```
+**`backend/.env`** — not committed to git
 
 | Variable | Description |
 |---|---|
 | `DATABASE_URL` | Full PostgreSQL connection string |
-| `PORT` | (optional) API server port, defaults to `3001` |
+| `API_KEY` | Secret key — must match `VITE_API_KEY` in frontend |
+| `PORT` | API server port (production: 5009, local: 3001) |
+| `FRONTEND_URL` | Allowed CORS origin (e.g. `https://b2b.nysonik.com`) |
+| `XERO_*` | Xero OAuth credentials (see Xero section) |
+
+**`frontend/.env`** — not committed to git
+
+| Variable | Description |
+|---|---|
+| `VITE_API_KEY` | Must match `API_KEY` in backend — baked into frontend at build time |
 
 ---
 
@@ -181,9 +197,9 @@ All new form submissions go into `b2b.entries`.
 | `qty` | integer | |
 | `unit_price` | numeric | |
 | `total` | numeric | qty × unit_price |
-| `payment_terms` | text | Net 0 / 30 / 40 / 45 / 60 |
+| `payment_terms` | text | Net 0/30/40/45/60 |
 | `due_date` | date | |
-| `order_no` | text | `MO-YYMMDD-XXXX` format |
+| `order_no` | text | MO-YYMMDD-XXXX format |
 | `status` | text | Received / Paid / Partially Received / Due |
 | `payment_rec_date` | date | |
 | `shipment_date` | date | |
@@ -193,63 +209,78 @@ All new form submissions go into `b2b.entries`.
 | `remarks` | text | |
 | `finance_remarks` | text | |
 | `closed_won` | text | |
-| `created_at` | timestamp | Auto-set by DB |
+| `currency` | text | USD / GBP / EUR etc. |
+| `fulfillment_status` | text | available / unavailable |
+| `fulfillment_ready_date` | date | |
+| `customer_po` | text | Customer purchase order number |
+| `created_at` | timestamptz | Auto-set by DB |
 
-> **Old schema**: `store.b2b_entries` — legacy table from before this project. Still exists but no longer written to.
+### Table: `b2b.fulfillment`
+
+Dedicated fulfillment table — works for static and DB-sourced orders alike.
+
+| Column | Type | Notes |
+|---|---|---|
+| `order_key` | text UNIQUE | orderNo or invoice |
+| `fulfillment_status` | text | available / unavailable |
+| `fulfilled_month` | text | |
+| `shipment_date` | date | |
+| `delivery` | text | Company / Self |
+| `fulfillment_ready_date` | date | ETA when unavailable |
+| `updated_at` | timestamptz | |
+
+### Table: `b2b.clients`
+
+One row per company — auto-populated from entries.
+
+All three tables are **auto-migrated on server startup** via `runMigrations()` in `backend/app.js`.
 
 ---
 
 ## 7. API Server
 
-File: `server.js`
+File: `backend/app.js`
 
-### `POST /api/b2b-entries`
+All routes require `x-api-key` header (except `/api/health`).
 
-Writes a new entry to `b2b.entries`.
+### `GET /api/b2b-entries`
+Returns all rows from `b2b.entries` ordered by `created_at DESC`.
 
-**Request body** (all fields optional except noted):
+### `POST /api/b2b-invoice`
+Saves multiple line items for one invoice + triggers Xero DRAFT creation.
 
 ```json
 {
-  "customer": "Jerry Kallman",
-  "company": "Airline International",
-  "product": "Carry-On: All-in-One",
-  "invoice": "1020",
-  "invoiceDate": "2026-07-16",
-  "sku": "AllG1",
-  "qty": 50,
-  "unitPrice": 89.99,
-  "total": 4499.50,
-  "paymentTerms": "Net 40",
-  "dueDate": "2026-08-25",
-  "orderNo": "MO-260716-BK3R",
-  "status": "Due",
-  "paymentRecDate": "",
-  "shipmentDate": "",
-  "fulfilledMonth": "July-2026",
-  "paymentRecMonth": "",
-  "delivery": "Company",
-  "remarks": "",
-  "financeRemarks": "",
-  "closedWon": ""
+  "header": {
+    "customer": "Jerry Kallman", "company": "Airline International",
+    "invoice": "1020", "invoiceDate": "2026-07-16",
+    "customerPO": "PO-12345",
+    "dueDate": "2026-08-15", "paymentTerms": "Net 30",
+    "orderNo": "MO-260716-XYZW", "status": "Due", "currency": "USD"
+  },
+  "lineItems": [
+    { "product": "Carry-On", "sku": "AllG1", "qty": 10, "unitPrice": 120.00 }
+  ]
 }
 ```
 
-**Response (success):**
-```json
-{ "ok": true, "id": 56, "orderNo": "MO-260716-BK3R", "createdAt": "2026-07-16T..." }
-```
+### `PATCH /api/b2b-row/:id`
+Inline-edits a single row in `b2b.entries`. Accepts any subset of editable fields. Builds a dynamic `SET` clause — only updates what you send.
 
-**Response (error):**
-```json
-{ "ok": false, "error": "..." }
-```
+### `PATCH /api/fulfillment/:orderKey`
+Upserts fulfillment data into `b2b.fulfillment`. Sending `fulfillmentStatus: ""` deletes the record (resets to pending).
+
+### `GET /api/fulfillment`
+Returns all records from `b2b.fulfillment`.
+
+### `GET /api/clients`
+Returns client master records with aggregated invoice count, total invoiced, total received.
+
+### `DELETE /api/b2b-entries`
+Deletes rows by ID array: `{ "ids": [1, 2, 3] }`
 
 ### `GET /api/health`
-
-```json
-{ "ok": true }
-```
+`{ "ok": true }` — no auth required.
 
 ---
 
@@ -303,10 +334,10 @@ Full-featured data grid. All data from `DataContext.transactions`.
 - **Search** — searches customer, company, product, invoice, sku
 - **Filter** — by company or status
 - **Sort** — click any column header, toggles asc/desc
-- **Sticky headers** — `thead` uses `sticky top-0 z-10`, table wrapped in `overflow-auto max-h-[calc(100vh-220px)]`
+- **Sticky headers** — `thead` uses `sticky top-0 z-10`
 - **Multi-select** — checkboxes, select-all with indeterminate state
-- **Bulk delete** — with two-click confirmation
-- **Inline edit** — select one row → "Edit row" → all fields become editable inputs/selects, total auto-calculated
+- **Bulk delete** — with two-click confirmation, syncs to DB
+- **Inline edit** — select one row → "Edit row" → all fields become editable inputs/selects, total auto-calculated → saved to DB via `PATCH /api/b2b-row/:id` then `refreshEntries()`
 - **Selection toolbar** — shows row count + total amount when rows selected
 
 ---
@@ -388,9 +419,9 @@ Form for creating new B2B entries. Writes to both **database** and **DataContext
 #### Sections
 
 1. **Who is this for?** — Customer name + Company (autocomplete from existing transactions)
-2. **What are they buying?** — Product & Colour + SKU + Invoice # + Invoice Date + Order # + Qty + Unit Price + Total
-3. **Payment details** — Terms + Due Date + Status + Payment Received Date
-4. **Fulfillment** — Fulfilled Month + Shipment Date + Delivery + Payment Rec. Month
+2. **Invoice details** — Invoice # (auto-incremented) + Invoice Date + **Customer PO #** + Order # (auto-generated)
+3. **What are they buying?** — Product & Colour + SKU + Qty + Unit Price + Line Total (multi-line support)
+4. **Payment details** — Terms + Due Date + Currency + Status + Payment Received Date
 5. **Notes** — Remarks + Finance Remarks
 
 #### Customer/Company Autocomplete
@@ -446,23 +477,24 @@ Sidebar panel (sticky, right side) shows a live card preview as you type: compan
 
 File: `frontend/src/context/DataContext.jsx`
 
-All components consume state via `useData()` hook. State is in-memory only — refreshing the page reloads from the seed data files.
+All components consume state via `useData()` hook. On load, `fetchAll()` fetches both `/api/b2b-entries` and `/api/fulfillment` in parallel, merges them into `transactions`.
 
 ### Shape
 
 ```js
 {
-  transactions: Transaction[],
-  vendors: Vendor[],
+  transactions: Transaction[],   // merged: static + DB + fulfillmentMap overlay
   monthlyRevenue: MonthlyRevenue[],
   inventory: InventoryItem[],
+  loading: boolean,
 
-  addTransaction(newTx),           // adds new entry, sets needsApproval: true, approvalStatus: "pending"
-  removeTransactions(ids: number[]),
-  updateTransaction(id, changes),
-  approveTransaction(id),          // sets approvalStatus: "approved", needsApproval: false
-  holdTransaction(id),             // sets approvalStatus: "held"
-  setFulfillmentStatus(id, status, readyDate?),  // status: "available" | "unavailable"
+  refreshEntries(),              // re-fetches both endpoints
+  addTransaction(),              // no-op — DB is source of truth
+  removeTransactions(ids),       // deletes from DB + local state
+  updateTransaction(id, changes),// optimistic local update (used before API call)
+  approveTransaction(id),
+  holdTransaction(id),
+  setFulfillmentStatus(),        // no-op — fulfillment goes through API
   updateInventoryItem(id, changes),
   addInventoryItem(newItem),
 }
@@ -478,6 +510,7 @@ All components consume state via `useData()` hook. State is in-memory only — r
   product: string,
   invoice: string,
   invoiceDate: string,
+  customerPO: string,
   sku: string,
   qty: number,
   unitPrice: number,
@@ -494,9 +527,8 @@ All components consume state via `useData()` hook. State is in-memory only — r
   remarks: string,
   financeRemarks: string,         // "bad debt" triggers red styling + KPI tracking
   closedWon: string,
-  needsApproval: boolean,
-  approvalStatus: "pending" | "approved" | "held",
-  fulfillment: "available" | "unavailable" | null,
+  currency: string,
+  fulfillment: string,            // "available" | "unavailable" | ""
   fulfillmentReadyDate: string | null,
 }
 ```
@@ -588,35 +620,41 @@ function generateOrderNo() {
 
 ## 12. Deployment
 
-### Frontend — Vercel
+### Production — b2b.nysonik.com (EC2)
 
-File: `vercel.json`
+- **Server:** AWS EC2 at `54.172.115.118`
+- **Path:** `/home/ec2-user/b2b`
+- **Process manager:** PM2 (`b2b-api`, id 92, port 5009)
+- **Web server:** Nginx — serves `dist` for frontend, proxies `/api/*` to port 5009
+- **SSL:** Let's Encrypt (auto-renews)
 
-```json
-{
-  "buildCommand": "cd frontend && npm install && npm run build",
-  "outputDirectory": "frontend/dist",
-  "installCommand": "echo skip",
-  "framework": "vite"
-}
+**Deploy after pushing to GitHub:**
+```bash
+cd /home/ec2-user/b2b
+git pull
+cd frontend && npm run build && sudo cp -r dist/* /var/www/b2b/dist/ && cd ..
+pm2 restart b2b-api
 ```
 
-Push to `main` branch triggers auto-deploy on Vercel.
+**Nginx config:** `/etc/nginx/conf.d/b2b.conf`  
+**PM2 config:** `ecosystem.config.js` in repo root
 
-> **Note:** Vercel deploys the frontend only. The Express API (`server.js`) is **not** deployed on Vercel. For production, the API needs to be hosted separately (e.g., EC2, Railway, Render).
+### Backup — Vercel
 
-### Backend — Local / Separate Server
+`vercel.json` is still configured. The repo auto-deploys to Vercel on push to `main` as a backup. The Vercel deployment uses `api/index.js` as a serverless function.
 
-The API server requires `DATABASE_URL` in `.env`. Run with:
+### Local development
+
 ```bash
-node server.js
+node backend/server.js   # API on :3001
+cd frontend && npm run dev  # UI on :5173
 ```
 
 ---
 
 ## 13. GitHub
 
-Repository: `https://github.com/MUHAMMADIBRAHIMARIF1122/B2B-NYSONIAN`
+Repository: `https://github.com/Ibrarf/B2B-NYSONIAN`
 
 **`.gitignore` includes:**
 - `.env` (database credentials)
@@ -699,17 +737,23 @@ If `financeRemarks` includes the substring `"bad debt"` the cell renders in red.
 | Jul 2026 | Added Finance Check page (O2C Stage 02 — Credit & Approval) |
 | Jul 2026 | Added Fulfillment page (manual availability flagging + ETA dates) |
 | Jul 2026 | Created Express API server + `b2b` schema in PostgreSQL |
-| Jul 2026 | Added `.env` with `DATABASE_URL`, dotenv integration |
 | Jul 2026 | `start.bat` — one-click startup for both servers |
 | Jul 2026 | Tab persistence via `localStorage` (survives page reload) |
 | Jul 2026 | Sticky table headers in Transactions page |
-| Jul 2026 | Added `vercel.json` for Vercel frontend deployment |
 | Jul 2026 | Add B2B: customer/company autocomplete with auto-fill from history |
-| Jul 2026 | Add B2B: auto-generated order numbers (`MO-YYMMDD-XXXX`, no regenerate button) |
-| Jul 2026 | Add B2B: product catalog from `active_products_export.csv` (250+ SKUs) |
-| Jul 2026 | Product catalog rebuilt from `active_products_variants_inventory.csv` — added color + inventory per SKU |
+| Jul 2026 | Add B2B: auto-generated order numbers (`MO-YYMMDD-XXXX`) |
+| Jul 2026 | Product catalog rebuilt — 398 SKUs, 53 products, color + inventory per SKU |
 | Jul 2026 | Product & Colour combined dropdown — selecting variant auto-fills SKU |
-| Jul 2026 | SKU autocomplete dropdown — selecting SKU back-fills Product & Colour |
-| Jul 2026 | Dropdowns made fully scrollable (no item cap) |
-| Jul 2026 | Merged `Untitled spreadsheet.xlsx` into product catalog — 398 SKUs, 53 products |
-| Jul 2026 | `DOCS.md` created (this file) |
+| Jul 2026 | Invoice auto-number — scans numeric and INV-xxx formats to find true max |
+| Jul 2026 | Refactored backend: `backend/app.js` (Express app) + `backend/server.js` (local listen) |
+| Jul 2026 | Added `api/index.js` Vercel serverless entry point |
+| Jul 2026 | Deployed to Vercel with `vercel.json` — rewrites `/api/*` to serverless function |
+| Jul 2026 | Added `b2b.fulfillment` dedicated table — fulfillment persists across page loads for all orders |
+| Jul 2026 | DataContext: `fetchAll()` fetches entries + fulfillment in parallel, merges via `fulfillmentMap` |
+| Jul 2026 | Dashboard: At-Risk Accounts changed to only flag past-due dates (not future) |
+| Jul 2026 | Transactions: inline edit now persists to DB via `PATCH /api/b2b-row/:id` |
+| Jul 2026 | Added `PATCH /api/b2b-row/:id` endpoint — inline-edits single row with dynamic SET clause |
+| Jul 2026 | Self-hosted deployment on EC2 at b2b.nysonik.com (Nginx + PM2 + Let's Encrypt SSL) |
+| Jul 2026 | Added `deploy/nginx.conf`, `deploy/setup.sh`, `ecosystem.config.js` to repo |
+| Jul 2026 | Add B2B: added Customer PO # field, saved to `b2b.entries.customer_po` |
+| Jul 2026 | `DOCS.md` + `README.md` updated to reflect current architecture |
