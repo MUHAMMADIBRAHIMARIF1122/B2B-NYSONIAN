@@ -103,7 +103,7 @@ const emptyForm = () => ({
   lineItems: [emptyLineItem()],
   invoice: "", invoiceDate: "", customerPO: "",
   currency: "USD",
-  paymentTerms: "", dueDate: "", orderNo: generateOrderNo(),
+  paymentTerms: "", dueDate: "", orderNo: "",
   status: "", paymentRecDate: "",
   remarks: "", financeRemarks: "",
 });
@@ -126,6 +126,9 @@ export default function AddB2B() {
   const [saveError,       setSaveError]      = useState(null);
   const [submitting,      setSubmitting]     = useState(false);
   const [orderNoVerified, setOrderNoVerified] = useState(false);
+  const [shVerifying,     setShVerifying]    = useState(false);
+  const [shOrder,         setShOrder]        = useState(null);  // ShipHero order details
+  const [shError,         setShError]        = useState(null);
 
   // Auto-generate next invoice number when form resets to empty.
   // Scans all existing invoices (numeric "1012" or "INV-012") to find the true max.
@@ -170,7 +173,34 @@ export default function AddB2B() {
   function set(key, val) {
     setForm(f => ({ ...f, [key]: val }));
     if (errors[key]) setErrors(e => ({ ...e, [key]: false }));
-    if (key === "orderNo") setOrderNoVerified(false);
+    if (key === "orderNo") { setOrderNoVerified(false); setShOrder(null); setShError(null); }
+  }
+
+  async function handleConfirmOrderNo() {
+    const no = form.orderNo.trim();
+    if (!no) return;
+    setShVerifying(true);
+    setShOrder(null);
+    setShError(null);
+    try {
+      const res = await fetch(`/api/shiphero/verify-order/${encodeURIComponent(no)}`, {
+        headers: { "x-api-key": import.meta.env.VITE_API_KEY || "" },
+      });
+      const body = await res.json().catch(() => ({}));
+      if (res.ok && body.ok) {
+        setOrderNoVerified(true);
+        setShOrder(body.order);
+        setErrors(e => ({ ...e, orderNo: false }));
+      } else {
+        setShError(body.error || "Order not found in ShipHero");
+        setOrderNoVerified(false);
+      }
+    } catch {
+      setShError("Could not reach ShipHero — check server connection");
+      setOrderNoVerified(false);
+    } finally {
+      setShVerifying(false);
+    }
   }
 
   // ── Line item handlers ────────────────────────────────────────────────────
@@ -354,6 +384,8 @@ export default function AddB2B() {
     });
     setErrors({});
     setOrderNoVerified(true); // existing orders already have a confirmed order number
+    setShOrder(null);
+    setShError(null);
     setMode("edit");
   }
 
@@ -443,7 +475,7 @@ export default function AddB2B() {
             <p className="text-sm text-gray-300 mb-1">Xero sync pending</p>
           )}
           <p className="text-sm text-gray-400 mb-6">Visible across Dashboard, Transactions, and Client Tracker.</p>
-          <button onClick={() => { setForm(emptyForm()); setErrors({}); setSavedEntry(null); setMode("add"); setOrderNoVerified(false); }}
+          <button onClick={() => { setForm(emptyForm()); setErrors({}); setSavedEntry(null); setMode("add"); setOrderNoVerified(false); setShOrder(null); setShError(null); }}
             className="px-6 py-2.5 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-700 transition-colors">
             Done
           </button>
@@ -531,6 +563,8 @@ export default function AddB2B() {
                       className={`flex-1 px-3 py-2.5 border rounded-lg text-sm font-mono font-semibold focus:outline-none focus:ring-2 transition-all ${
                         orderNoVerified
                           ? "bg-emerald-50 border-emerald-300 text-emerald-700 focus:ring-emerald-300"
+                          : shError
+                          ? "bg-red-50 border-red-300 text-gray-800 focus:ring-red-300"
                           : errors.orderNo
                           ? "bg-red-50 border-red-300 text-gray-800 focus:ring-red-300"
                           : "bg-white border-gray-200 text-indigo-700 focus:ring-indigo-400"
@@ -538,29 +572,48 @@ export default function AddB2B() {
                     />
                     <button
                       type="button"
-                      onClick={() => {
-                        if (!form.orderNo.trim()) return;
-                        setOrderNoVerified(true);
-                        setErrors(e => ({ ...e, orderNo: false }));
-                      }}
-                      title="Confirm order number"
-                      className={`px-3 rounded-lg border text-sm font-semibold transition-all flex items-center gap-1.5 ${
+                      onClick={handleConfirmOrderNo}
+                      disabled={shVerifying || !form.orderNo.trim()}
+                      title="Verify order number in ShipHero"
+                      className={`px-3 rounded-lg border text-sm font-semibold transition-all flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed ${
                         orderNoVerified
                           ? "bg-emerald-600 border-emerald-600 text-white"
+                          : shError
+                          ? "bg-red-50 border-red-300 text-red-600 hover:bg-red-100"
                           : "bg-white border-gray-200 text-gray-500 hover:border-indigo-400 hover:text-indigo-600"
                       }`}
                     >
-                      {orderNoVerified ? "✓ Verified" : "Confirm"}
+                      {shVerifying ? "Checking…" : orderNoVerified ? "✓ Verified" : "Confirm"}
                     </button>
                   </div>
-                  {errors.orderNo && !orderNoVerified && (
+
+                  {/* Status messages */}
+                  {errors.orderNo && !orderNoVerified && !shError && !shVerifying && (
                     <p className="text-[11px] text-red-500 mt-1">Enter the order number and click Confirm</p>
                   )}
-                  {orderNoVerified && (
-                    <p className="text-[11px] text-emerald-600 mt-1">✓ Order number confirmed</p>
+                  {shError && (
+                    <p className="text-[11px] text-red-500 mt-1">{shError}</p>
                   )}
-                  {!orderNoVerified && !errors.orderNo && (
-                    <p className="text-[11px] text-gray-400 mt-1">Type the order number then click Confirm</p>
+                  {!orderNoVerified && !shError && !errors.orderNo && !shVerifying && (
+                    <p className="text-[11px] text-gray-400 mt-1">Type the ShipHero order number then click Confirm</p>
+                  )}
+
+                  {/* ShipHero order details on success */}
+                  {orderNoVerified && shOrder && (
+                    <div className="mt-2 p-2.5 bg-emerald-50 border border-emerald-200 rounded-lg">
+                      <p className="text-[11px] font-semibold text-emerald-700 mb-1">
+                        ✓ Found in ShipHero · {shOrder.fulfillment_status || "No status"}
+                      </p>
+                      {shOrder.line_items?.length > 0 && (
+                        <ul className="space-y-0.5">
+                          {shOrder.line_items.map((li, i) => (
+                            <li key={i} className="text-[11px] text-emerald-600">
+                              {li.sku} · {li.name} · qty {li.quantity}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>
