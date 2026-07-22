@@ -843,6 +843,7 @@ app.get("/api/shiphero/verify-order/:orderNo", requireApiKey, readLimiter, async
 
   try {
     const result = await verifyOrder(orderNo);
+    console.log(`[ShipHero] lookup "${orderNo}" → found=${result.found}`);
     if (!result.found) {
       return res.status(404).json({ ok: false, error: `Order "${orderNo}" not found in ShipHero` });
     }
